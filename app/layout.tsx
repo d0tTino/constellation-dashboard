@@ -1,6 +1,7 @@
 import "./globals.css";
 import { SocketProvider } from "./socket-context";
 import { ReactNode, useState } from 'react';
+import { SWRProvider } from '../lib/swr';
 import Link from 'next/link';
 import { SessionProvider, signIn, signOut, useSession } from 'next-auth/react';
 
@@ -23,11 +24,13 @@ function Shell({ children }: { children: ReactNode }) {
   const toggleTheme = () => setTheme(t => (t === 'light' ? 'dark' : 'light'));
 
   return (
-    <SessionProvider>
-      <ShellContent theme={theme} toggleTheme={toggleTheme}>
-        {children}
-      </ShellContent>
-    </SessionProvider>
+    <SWRProvider>
+      <SessionProvider>
+        <ShellContent theme={theme} toggleTheme={toggleTheme}>
+          {children}
+        </ShellContent>
+      </SessionProvider>
+    </SWRProvider>
   );
 }
 
