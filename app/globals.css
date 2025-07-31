@@ -1,0 +1,15 @@
+html, body {
+  padding: 0;
+  margin: 0;
+  font-family: sans-serif;
+}
+
+body.light {
+  background: #fff;
+  color: #000;
+}
+
+body.dark {
+  background: #000;
+  color: #fff;
+}
