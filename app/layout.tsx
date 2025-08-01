@@ -1,6 +1,6 @@
 import "./globals.css";
 import { SocketProvider } from "./socket-context";
-import { ReactNode } from 'react';
+import { ReactNode, useEffect } from 'react';
 
 import { SWRProvider } from '../lib/swr';
 import Link from 'next/link';
@@ -32,7 +32,7 @@ function Shell({ children }: { children: ReactNode }) {
   useEffect(() => {
     const stored = window.localStorage.getItem('theme') as 'light' | 'dark' | null;
     if (stored) setTheme(stored);
-  }, []);
+  }, [setTheme]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -56,8 +56,6 @@ function ShellContent({
   toggleTheme,
 }: {
   children: ReactNode;
-  theme: 'cyber' | 'pastel';
-
   toggleTheme: () => void;
 }) {
   const { data: session } = useSession();
