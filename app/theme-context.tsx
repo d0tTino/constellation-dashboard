@@ -10,26 +10,19 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>('cyber');
+  const [theme, setTheme] = useState<Theme>(() => {
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem('theme') as Theme) || 'cyber';
+    }
+    return 'cyber';
+  });
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const stored = localStorage.getItem('theme') as Theme | null;
-    if (stored) {
-      setThemeState(stored);
-      document.documentElement.dataset.theme = stored;
-    } else {
-      document.documentElement.dataset.theme = 'cyber';
-    }
-  }, []);
-
-  const setTheme = (t: Theme) => {
-    setThemeState(t);
     if (typeof window !== 'undefined') {
-      localStorage.setItem('theme', t);
-      document.documentElement.dataset.theme = t;
+      localStorage.setItem('theme', theme);
+      document.documentElement.dataset.theme = theme;
     }
-  };
+  }, [theme]);
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme }}>

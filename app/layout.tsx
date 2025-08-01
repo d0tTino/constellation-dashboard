@@ -29,17 +29,6 @@ function Shell({ children }: { children: ReactNode }) {
   const toggleTheme = () =>
     setTheme(theme === 'cyber' ? 'pastel' : 'cyber');
 
-  useEffect(() => {
-    const stored = window.localStorage.getItem('theme') as 'light' | 'dark' | null;
-    if (stored) setTheme(stored);
-  }, [setTheme]);
-
-  useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-    document.body.className = theme;
-    window.localStorage.setItem('theme', theme);
-  }, [theme]);
-
   return (
     <SWRProvider>
       <SessionProvider>
