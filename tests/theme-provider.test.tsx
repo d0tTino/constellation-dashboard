@@ -49,4 +49,29 @@ describe('ThemeProvider', () => {
     expect(localStorage.getItem('theme')).toBe('pastel');
     expect(document.documentElement.dataset.theme).toBe('pastel');
   });
+
+  it('persists theme across provider remounts', async () => {
+    function SetTheme() {
+      const { setTheme } = useTheme();
+      useEffect(() => {
+        setTheme('pastel');
+      }, [setTheme]);
+      return null;
+    }
+    const first = render(
+      <ThemeProvider>
+        <SetTheme />
+      </ThemeProvider>
+    );
+    await act(async () => {});
+    first.root.unmount();
+
+    render(
+      <ThemeProvider>
+        <div>test</div>
+      </ThemeProvider>
+    );
+    await act(async () => {});
+    expect(document.documentElement.dataset.theme).toBe('pastel');
+  });
 });

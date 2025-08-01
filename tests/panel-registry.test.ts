@@ -13,4 +13,28 @@ describe('panel registry', () => {
       expect(typeof panel.Component).toBe('function')
     }
   })
+
+  it('returns metadata for each known panel', async () => {
+    const panels = await getPanels()
+    const ids = panels.map(p => p.id)
+    const titles = panels.map(p => p.title)
+    expect(ids).toEqual([
+      'home',
+      'about',
+      'calendar',
+      'finance',
+      'invest',
+      'idea-garden',
+      'settings',
+    ])
+    expect(titles).toEqual([
+      'Home Panel',
+      'About Panel',
+      'Calendar Panel',
+      'Finance Panel',
+      'Invest Panel',
+      'Idea Garden Panel',
+      'Settings Panel',
+    ])
+  })
 })
