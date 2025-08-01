@@ -22,7 +22,7 @@ const registry: PanelMetadata[] = [
   { id: 'calendar', title: 'Calendar Panel', module: '../app/panels/CalendarPanel' },
   { id: 'finance', title: 'Finance Panel', module: '../app/panels/FinancePanel' },
   { id: 'invest', title: 'Invest Panel', module: '../app/panels/InvestPanel' },
-  { id: 'ideas', title: 'Ideas Panel', module: '../app/panels/IdeasPanel' },
+  { id: 'idea-garden', title: 'Idea Garden Panel', module: '../app/panels/IdeaGardenPanel' },
   { id: 'settings', title: 'Settings Panel', module: '../app/panels/SettingsPanel' },
 ];
 
