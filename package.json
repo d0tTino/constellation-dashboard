@@ -18,7 +18,8 @@
     "next": "^15.4.5",
     "next-auth": "^4.24.11",
     "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react-dom": "^19.1.1",
+    "swr": "^2.3.4"
   },
   "devDependencies": {
     "@types/node": "24.1.0",
