@@ -19,6 +19,11 @@ export const panelSchema = {
 const registry: PanelMetadata[] = [
   { id: 'home', title: 'Home Panel', module: '../app/panels/HomePanel' },
   { id: 'about', title: 'About Panel', module: '../app/panels/AboutPanel' },
+  { id: 'calendar', title: 'Calendar Panel', module: '../app/panels/CalendarPanel' },
+  { id: 'finance', title: 'Finance Panel', module: '../app/panels/FinancePanel' },
+  { id: 'invest', title: 'Invest Panel', module: '../app/panels/InvestPanel' },
+  { id: 'ideas', title: 'Ideas Panel', module: '../app/panels/IdeasPanel' },
+  { id: 'settings', title: 'Settings Panel', module: '../app/panels/SettingsPanel' },
 ];
 
 export type LoadedPanel = PanelMetadata & { Component: React.ComponentType<any> };
