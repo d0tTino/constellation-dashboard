@@ -1,14 +1,16 @@
 import { describe, it, expect, vi } from 'vitest'
 
-// Helper to reload a module so that its internal state is reset between tests
-async function loadScheduleModule() {
+// Helper to reload modules so that their shared state is reset between tests
+async function loadScheduleModules() {
   vi.resetModules()
-  return await import('../app/api/schedule/route')
+  const schedule = await import('../app/api/schedule/route')
+  const task = await import('../app/api/task/[id]/route')
+  return { schedule, task }
 }
 
 describe('schedule API routes', () => {
   it('handles GET and POST', async () => {
-    const { GET, POST } = await loadScheduleModule()
+    const { schedule: { GET, POST } } = await loadScheduleModules()
     let res = await GET()
     let events = await res.json()
     expect(events).toHaveLength(1)
@@ -26,6 +28,29 @@ describe('schedule API routes', () => {
     events = await res.json()
     expect(events).toHaveLength(2)
     expect(events.find((e: any) => e.id === newEvent.id)).toMatchObject(newEvent)
+  })
+
+  it('handles PATCH via task API', async () => {
+    const { schedule: { GET, POST }, task: { PATCH } } = await loadScheduleModules()
+    const newEvent = { id: '3', title: 'Patch Test', start: '2024-05-01' }
+    const req = new Request('http://test', {
+      method: 'POST',
+      body: JSON.stringify(newEvent),
+      headers: { 'Content-Type': 'application/json' },
+    })
+    await POST(req)
+
+    const patchReq = new Request('http://test', {
+      method: 'PATCH',
+      body: JSON.stringify({ start: '2024-06-01' }),
+      headers: { 'Content-Type': 'application/json' },
+    })
+    const patchRes = await PATCH(patchReq, { params: { id: newEvent.id } })
+    expect(await patchRes.json()).toEqual({ success: true })
+
+    const res = await GET()
+    const events = await res.json()
+    expect(events.find((e: any) => e.id === newEvent.id)).toMatchObject({ start: '2024-06-01' })
   })
 })
 
