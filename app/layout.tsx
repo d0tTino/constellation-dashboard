@@ -1,6 +1,7 @@
 import "./globals.css";
 import { SocketProvider } from "./socket-context";
 import { ReactNode } from 'react';
+
 import { SWRProvider } from '../lib/swr';
 import Link from 'next/link';
 import { SessionProvider, signIn, signOut, useSession } from 'next-auth/react';
@@ -16,6 +17,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <ThemeProvider>
         <Shell>{children}</Shell>
       </ThemeProvider>
+
     </html>
   );
 }
@@ -27,12 +29,23 @@ function Shell({ children }: { children: ReactNode }) {
   const toggleTheme = () =>
     setTheme(theme === 'cyber' ? 'pastel' : 'cyber');
 
+  useEffect(() => {
+    const stored = window.localStorage.getItem('theme') as 'light' | 'dark' | null;
+    if (stored) setTheme(stored);
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    document.body.className = theme;
+    window.localStorage.setItem('theme', theme);
+  }, [theme]);
+
   return (
     <SWRProvider>
       <SessionProvider>
-        <ShellContent theme={theme} toggleTheme={toggleTheme}>
-          {children}
-        </ShellContent>
+        <SocketProvider>
+          <ShellContent toggleTheme={toggleTheme}>{children}</ShellContent>
+        </SocketProvider>
       </SessionProvider>
     </SWRProvider>
   );
@@ -40,11 +53,11 @@ function Shell({ children }: { children: ReactNode }) {
 
 function ShellContent({
   children,
-  theme,
   toggleTheme,
 }: {
   children: ReactNode;
   theme: 'cyber' | 'pastel';
+
   toggleTheme: () => void;
 }) {
   const { data: session } = useSession();
@@ -65,5 +78,6 @@ function ShellContent({
         {children}
       </body>
     </SocketProvider>
+
   );
 }
