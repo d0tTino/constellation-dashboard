@@ -6,24 +6,28 @@ html, body {
   padding: 0;
   margin: 0;
   font-family: sans-serif;
+  background: var(--background);
+  color: var(--foreground);
 }
 
 body.light {
-  background: #fff;
-  color: #000;
+  background: var(--background);
+  color: var(--foreground);
 }
 
 body.dark {
-  background: #000;
-  color: #fff;
+  background: var(--background);
+  color: var(--foreground);
 }
 
 :root[data-theme='cyber'] {
   --background: #0a0a0a;
-  --primary: #ff00ff;
+  --foreground: #ffffff;
+  --accent: #ff00ff;
 }
 
 :root[data-theme='pastel'] {
   --background: #fafafa;
-  --primary: #ffd1dc;
+  --foreground: #000000;
+  --accent: #ffd1dc;
 }
