@@ -1,9 +1,10 @@
 import "./globals.css";
 import { SocketProvider } from "./socket-context";
-import { ReactNode, useState } from 'react';
+import { ReactNode } from 'react';
 import { SWRProvider } from '../lib/swr';
 import Link from 'next/link';
 import { SessionProvider, signIn, signOut, useSession } from 'next-auth/react';
+import { ThemeProvider, useTheme } from './theme-context';
 
 export const metadata = {
   title: 'Constellation Dashboard',
@@ -12,7 +13,9 @@ export const metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-      <Shell>{children}</Shell>
+      <ThemeProvider>
+        <Shell>{children}</Shell>
+      </ThemeProvider>
     </html>
   );
 }
@@ -20,8 +23,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 function Shell({ children }: { children: ReactNode }) {
   'use client';
 
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
-  const toggleTheme = () => setTheme(t => (t === 'light' ? 'dark' : 'light'));
+  const { theme, setTheme } = useTheme();
+  const toggleTheme = () =>
+    setTheme(theme === 'cyber' ? 'pastel' : 'cyber');
 
   return (
     <SWRProvider>
@@ -40,16 +44,17 @@ function ShellContent({
   toggleTheme,
 }: {
   children: ReactNode;
-  theme: 'light' | 'dark';
+  theme: 'cyber' | 'pastel';
   toggleTheme: () => void;
 }) {
   const { data: session } = useSession();
 
   return (
     <SocketProvider>
-      <body className={theme}>
+      <body>
         <nav style={{ display: 'flex', gap: '1rem' }}>
           <Link href="/">Home</Link>
+          <Link href="/settings">Settings</Link>
           {session ? (
             <button type="button" onClick={() => signOut()}>Sign out</button>
           ) : (
