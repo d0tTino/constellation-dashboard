@@ -1,6 +1,4 @@
-let events = [
-  { id: '1', title: 'Sample Event', start: new Date().toISOString().substring(0,10) }
-]
+import { events } from './data'
 
 export async function GET() {
   return Response.json(events)

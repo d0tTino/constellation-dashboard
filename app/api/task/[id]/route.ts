@@ -3,6 +3,8 @@ const tasks = [
   { id: '2', name: 'Sample Task Two', status: 'completed' },
 ]
 
+import { events } from '../../schedule/data'
+
 export async function GET(
   _req: Request,
   { params }: { params: { id: string } }
@@ -13,4 +15,17 @@ export async function GET(
     status: 'pending',
   }
   return Response.json(task)
+}
+
+export async function PATCH(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  const data = await req.json()
+  const idx = events.findIndex(e => e.id === params.id)
+  if (idx === -1) {
+    return new Response('Not found', { status: 404 })
+  }
+  events[idx] = { ...events[idx], ...data }
+  return Response.json({ success: true })
 }

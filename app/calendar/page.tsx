@@ -10,10 +10,10 @@ export default function CalendarPage() {
   const { data: events = [], mutate } = useSWR('/api/schedule', fetcher)
 
   const handleDrop = async (arg: EventDropArg) => {
-    await fetch('/api/schedule', {
-      method: 'POST',
+    await fetch(`/api/task/${arg.event.id}`, {
+      method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: arg.event.id, start: arg.event.startStr, end: arg.event.endStr })
+      body: JSON.stringify({ start: arg.event.startStr, end: arg.event.endStr })
     })
     mutate()
   }
