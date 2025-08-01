@@ -50,8 +50,7 @@ function ShellContent({
   const { data: session } = useSession();
 
   return (
-    <SocketProvider>
-      <body>
+    <body>
         <nav style={{ display: 'flex', gap: '1rem' }}>
           <Link href="/">Home</Link>
           <Link href="/settings">Settings</Link>
@@ -64,7 +63,6 @@ function ShellContent({
         </nav>
         {children}
       </body>
-    </SocketProvider>
 
   );
 }

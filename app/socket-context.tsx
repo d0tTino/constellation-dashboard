@@ -1,5 +1,5 @@
 'use client';
-import { createContext, useContext, useEffect, useRef } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 
 const SocketContext = createContext<WebSocket | null>(null);
 
@@ -8,16 +8,17 @@ export function useSocket() {
 }
 
 export function SocketProvider({ children }: { children: React.ReactNode }) {
-  const socketRef = useRef<WebSocket | null>(null);
+  const [socket, setSocket] = useState<WebSocket | null>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    socketRef.current = new WebSocket('ws://localhost:3001');
-    return () => socketRef.current?.close();
+    const ws = new WebSocket('ws://localhost:3001');
+    setSocket(ws);
+    return () => ws.close();
   }, []);
 
   return (
-    <SocketContext.Provider value={socketRef.current}>
+    <SocketContext.Provider value={socket}>
       {children}
     </SocketContext.Provider>
   );
