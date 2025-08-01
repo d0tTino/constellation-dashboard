@@ -14,6 +14,13 @@ export default function DashboardPage() {
     getPanels().then(setPanels)
   }, [])
 
+  // Persist layout changes to localStorage
+  useEffect(() => {
+    if (layout.length) {
+      window.localStorage.setItem(storageKey, JSON.stringify(layout))
+    }
+  }, [layout])
+
   useEffect(() => {
     const saved = window.localStorage.getItem(storageKey)
     if (saved) {
@@ -26,14 +33,17 @@ export default function DashboardPage() {
     window.localStorage.setItem(storageKey, JSON.stringify(next))
   }
 
-  const addPanel = (id: string) => {
-    if (layout.find(l => l.i === id)) return
+  const addPanel = (panelId: string) => {
+    if (layout.find(l => l.i === panelId)) return
+    if (!panels.find(p => p.id === panelId)) return
     const y = layout.reduce((max, l) => Math.max(max, l.y + l.h), 0)
-    setLayout([...layout, { i: id, x: 0, y, w: 2, h: 2 }])
+    const next = [...layout, { i: panelId, x: 0, y, w: 2, h: 2 }]
+    setLayout(next)
+    window.localStorage.setItem(storageKey, JSON.stringify(next))
   }
 
-  const removePanel = (id: string) => {
-    const next = layout.filter(l => l.i !== id)
+  const removePanel = (panelId: string) => {
+    const next = layout.filter(l => l.i !== panelId)
     setLayout(next)
     window.localStorage.setItem(storageKey, JSON.stringify(next))
   }
