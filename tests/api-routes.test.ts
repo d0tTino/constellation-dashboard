@@ -10,7 +10,37 @@ async function loadScheduleModules() {
 
 describe('schedule API routes', () => {
   it('handles GET and POST', async () => {
-    const { schedule: { GET, POST } } = await loadScheduleModules()
+    process.env.CASCADENCE_API_BASE_URL = 'http://cascadence.test'
+    process.env.CASCADENCE_API_TOKEN = 'token'
+
+    const mockEvents = [
+      { id: '1', title: 'Sample Event', start: '2024-01-01' },
+    ]
+
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockImplementation(async (input, init) => {
+        const url = input.toString()
+        const base = process.env.CASCADENCE_API_BASE_URL
+        const method = (init?.method ?? 'GET').toUpperCase()
+        if (url === `${base}/schedule`) {
+          if (method === 'GET') {
+            return new Response(JSON.stringify(mockEvents), { status: 200 })
+          }
+          if (method === 'POST') {
+            const body = JSON.parse(init!.body as string)
+            mockEvents.push(body)
+            return new Response(JSON.stringify({ success: true }), {
+              status: 200,
+            })
+          }
+        }
+        throw new Error('Unexpected call')
+      })
+
+    const {
+      schedule: { GET, POST },
+    } = await loadScheduleModules()
     let res = await GET()
     let events = await res.json()
     expect(events).toHaveLength(1)
@@ -21,17 +51,62 @@ describe('schedule API routes', () => {
       body: JSON.stringify(newEvent),
       headers: { 'Content-Type': 'application/json' },
     })
-    let postRes = await POST(req)
+    const postRes = await POST(req)
     expect(await postRes.json()).toEqual({ success: true })
 
     res = await GET()
     events = await res.json()
     expect(events).toHaveLength(2)
-    expect(events.find((e: any) => e.id === newEvent.id)).toMatchObject(newEvent)
+    expect(events.find((e: any) => e.id === newEvent.id)).toMatchObject(
+      newEvent,
+    )
+
+    fetchMock.mockRestore()
   })
 
   it('handles PATCH via task API', async () => {
-    const { schedule: { GET, POST }, task: { PATCH } } = await loadScheduleModules()
+    process.env.CASCADENCE_API_BASE_URL = 'http://cascadence.test'
+    process.env.CASCADENCE_API_TOKEN = 'token'
+
+    const mockEvents: any[] = []
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockImplementation(async (input, init) => {
+        const url = input.toString()
+        const base = process.env.CASCADENCE_API_BASE_URL
+        const method = (init?.method ?? 'GET').toUpperCase()
+        if (url === `${base}/schedule`) {
+          if (method === 'GET') {
+            return new Response(JSON.stringify(mockEvents), { status: 200 })
+          }
+          if (method === 'POST') {
+            const body = JSON.parse(init!.body as string)
+            mockEvents.push(body)
+            return new Response(JSON.stringify({ success: true }), {
+              status: 200,
+            })
+          }
+        }
+        const taskMatch = url.match(new RegExp(`${base}/task/(.+)`))
+        if (taskMatch && method === 'PATCH') {
+          const id = taskMatch[1]
+          const idx = mockEvents.findIndex(e => e.id === id)
+          if (idx === -1) {
+            return new Response('Not found', { status: 404 })
+          }
+          const body = JSON.parse(init!.body as string)
+          mockEvents[idx] = { ...mockEvents[idx], ...body }
+          return new Response(JSON.stringify({ success: true }), {
+            status: 200,
+          })
+        }
+        throw new Error('Unexpected call')
+      })
+
+    const {
+      schedule: { GET, POST },
+      task: { PATCH },
+    } = await loadScheduleModules()
     const newEvent = { id: '3', title: 'Patch Test', start: '2024-05-01' }
     const req = new Request('http://test', {
       method: 'POST',
@@ -50,7 +125,11 @@ describe('schedule API routes', () => {
 
     const res = await GET()
     const events = await res.json()
-    expect(events.find((e: any) => e.id === newEvent.id)).toMatchObject({ start: '2024-06-01' })
+    expect(events.find((e: any) => e.id === newEvent.id)).toMatchObject({
+      start: '2024-06-01',
+    })
+
+    fetchMock.mockRestore()
   })
 })
 

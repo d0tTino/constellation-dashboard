@@ -1,31 +1,32 @@
-const tasks = [
-  { id: '1', name: 'Sample Task One', status: 'pending' },
-  { id: '2', name: 'Sample Task Two', status: 'completed' },
-]
-
-import { events } from '../../schedule/data'
+const baseUrl = process.env.CASCADENCE_API_BASE_URL
+const token = process.env.CASCADENCE_API_TOKEN
 
 export async function GET(
   _req: Request,
   { params }: { params: { id: string } }
 ) {
-  const task = tasks.find(t => t.id === params.id) ?? {
-    id: params.id,
-    name: `Mock Task ${params.id}`,
-    status: 'pending',
-  }
-  return Response.json(task)
+  const res = await fetch(`${baseUrl}/task/${params.id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+  const data = await res.json()
+  return Response.json(data, { status: res.status })
 }
 
 export async function PATCH(
   req: Request,
   { params }: { params: { id: string } }
 ) {
-  const data = await req.json()
-  const idx = events.findIndex(e => e.id === params.id)
-  if (idx === -1) {
-    return new Response('Not found', { status: 404 })
-  }
-  events[idx] = { ...events[idx], ...data }
-  return Response.json({ success: true })
+  const body = await req.json()
+  const res = await fetch(`${baseUrl}/task/${params.id}`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  })
+  const data = await res.json()
+  return Response.json(data, { status: res.status })
 }

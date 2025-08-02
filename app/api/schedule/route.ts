@@ -1,16 +1,26 @@
-import { events } from './data'
+const baseUrl = process.env.CASCADENCE_API_BASE_URL
+const token = process.env.CASCADENCE_API_TOKEN
 
 export async function GET() {
-  return Response.json(events)
+  const res = await fetch(`${baseUrl}/schedule`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+  const data = await res.json()
+  return Response.json(data, { status: res.status })
 }
 
 export async function POST(req: Request) {
-  const data = await req.json()
-  const idx = events.findIndex(e => e.id === data.id)
-  if (idx !== -1) {
-    events[idx] = { ...events[idx], ...data }
-  } else {
-    events.push(data)
-  }
-  return Response.json({ success: true })
+  const body = await req.json()
+  const res = await fetch(`${baseUrl}/schedule`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  })
+  const data = await res.json()
+  return Response.json(data, { status: res.status })
 }
