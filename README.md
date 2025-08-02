@@ -22,6 +22,10 @@ The app will be available at `http://localhost:3000`.
 - Run `npm run lint` to check code style.
 - Run `npm run test` to execute unit tests with Vitest.
 
+## Environment Variables
+
+- `NEXT_PUBLIC_WS_URL` &ndash; WebSocket server URL used by the dashboard. Defaults to `ws://localhost:3001` if not provided.
+
 ## Adding New Panels
 
 1. Create a React component in `app/panels/`.
