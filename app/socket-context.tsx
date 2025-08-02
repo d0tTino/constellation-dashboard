@@ -12,10 +12,42 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const url = process.env.NEXT_PUBLIC_WS_URL ?? 'ws://localhost:3001';
-    const ws = new WebSocket(url);
-    setSocket(ws);
-    return () => ws.close();
+    const url = process.env.NEXT_PUBLIC_WS_URL;
+    if (!url) {
+      console.error('WebSocket URL is not defined');
+      return;
+    }
+
+    let ws: WebSocket;
+    let reconnectAttempts = 0;
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+
+    const connect = () => {
+      ws = new WebSocket(url);
+      setSocket(ws);
+
+      ws.onopen = () => {
+        reconnectAttempts = 0;
+      };
+
+      ws.onerror = (event) => {
+        console.error('WebSocket error:', event);
+      };
+
+      ws.onclose = (event) => {
+        console.error('WebSocket closed:', event);
+        const delay = Math.min(10000, 1000 * 2 ** reconnectAttempts);
+        reconnectAttempts += 1;
+        timeout = setTimeout(connect, delay);
+      };
+    };
+
+    connect();
+
+    return () => {
+      if (timeout) clearTimeout(timeout);
+      ws.close();
+    };
   }, []);
 
   return (
