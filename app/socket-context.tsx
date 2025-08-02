@@ -12,7 +12,8 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const ws = new WebSocket('ws://localhost:3001');
+    const url = process.env.NEXT_PUBLIC_WS_URL ?? 'ws://localhost:3001';
+    const ws = new WebSocket(url);
     setSocket(ws);
     return () => ws.close();
   }, []);
