@@ -1,0 +1,42 @@
+'use client'
+
+import React, { useEffect } from 'react'
+import FullCalendar from '@fullcalendar/react'
+import dayGridPlugin from '@fullcalendar/daygrid'
+import interactionPlugin, { EventDropArg } from '@fullcalendar/interaction'
+import useSWR from 'swr'
+import { fetcher } from '../../lib/swr'
+
+interface ScheduleCalendarProps {
+  onMutate?: (mutate: () => void) => void
+}
+
+export default function ScheduleCalendar({ onMutate }: ScheduleCalendarProps) {
+  const { data: events = [], mutate } = useSWR('/api/schedule', fetcher)
+
+  useEffect(() => {
+    if (onMutate) {
+      onMutate(mutate)
+    }
+  }, [mutate, onMutate])
+
+  const handleDrop = async (arg: EventDropArg) => {
+    await fetch(`/api/task/${arg.event.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ start: arg.event.startStr, end: arg.event.endStr })
+    })
+    mutate()
+  }
+
+  return (
+    <FullCalendar
+      plugins={[dayGridPlugin, interactionPlugin]}
+      initialView="dayGridMonth"
+      events={events}
+      editable
+      eventDrop={handleDrop}
+    />
+  )
+}
+
