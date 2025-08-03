@@ -1,9 +1,15 @@
 import { getEvent, updateEvent, validateEventPatch } from '../../schedule/store'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '../../auth/[...nextauth]/route'
 
 export async function GET(
   _req: Request,
   { params }: { params: { id: string } },
 ) {
+  const session = await getServerSession(authOptions)
+  if (!session) {
+    return new Response('Unauthorized', { status: 401 })
+  }
   const event = await getEvent(params.id)
   if (!event) {
     return new Response('Not found', { status: 404 })
@@ -15,6 +21,10 @@ export async function PATCH(
   req: Request,
   { params }: { params: { id: string } },
 ) {
+  const session = await getServerSession(authOptions)
+  if (!session) {
+    return new Response('Unauthorized', { status: 401 })
+  }
   let body: unknown
   try {
     body = await req.json()
