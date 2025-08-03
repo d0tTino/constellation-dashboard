@@ -1,6 +1,8 @@
 'use client'
+import React, { useEffect } from 'react'
 import useSWR from 'swr'
 import { fetcher } from '../../lib/swr'
+import { useFinanceUpdates } from '../socket-context'
 
 type HistoryItem = {
   id: string
@@ -9,7 +11,11 @@ type HistoryItem = {
 }
 
 export default function FinanceHistoryPage() {
-  const { data } = useSWR<HistoryItem[]>('/api/v1/report/budget/history', fetcher)
+  const { data, mutate } = useSWR<HistoryItem[]>('/api/v1/report/budget/history', fetcher)
+  const update = useFinanceUpdates()
+  useEffect(() => {
+    if (update) mutate()
+  }, [update, mutate])
   const history = data ?? []
 
   return (

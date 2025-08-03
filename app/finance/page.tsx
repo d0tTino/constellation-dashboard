@@ -1,8 +1,9 @@
 'use client'
-import { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import useSWR from 'swr'
 import { fetcher } from '../../lib/swr'
 import { BudgetOption, rankBudgetOptions } from '../../lib/finance'
+import { useFinanceUpdates } from '../socket-context'
 
 export default function FinancePage() {
   const [budget, setBudget] = useState(1000)
@@ -11,6 +12,11 @@ export default function FinancePage() {
     `/api/v1/report/budget?budget=${budget}&payoffTime=${payoffTime}`,
     fetcher,
   )
+
+  const update = useFinanceUpdates()
+  useEffect(() => {
+    if (update) mutate()
+  }, [update, mutate])
 
   const ranked = rankBudgetOptions(
     (data ?? [
