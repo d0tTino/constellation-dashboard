@@ -30,5 +30,27 @@ describe('FinanceHistoryPage', () => {
     expect(container.textContent).toContain('2024-01-01');
     expect(container.textContent).toContain('Total Cost: $123');
   });
-});
 
+  it('shows actions for a selected history item and returns back', () => {
+    swrMock = vi.fn((key: string) => {
+      if (key === '/api/v1/report/budget/history') {
+        return { data: [{ id: '1', date: '2024-01-01', totalCost: 123 }], mutate: vi.fn() };
+      }
+      if (key === '/api/v1/report/budget/history/1') {
+        return { data: [{ id: 'a1', description: 'Cut coffee spend' }] };
+      }
+      return {};
+    });
+    const { container } = render(<FinanceHistoryPage />);
+    const btn = container.querySelector('button') as HTMLButtonElement;
+    act(() => {
+      btn.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    expect(container.textContent).toContain('Cut coffee spend');
+    const back = Array.from(container.querySelectorAll('button')).find((b) => b.textContent === 'Back') as HTMLButtonElement;
+    act(() => {
+      back.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    expect(container.textContent).toContain('Total Cost: $123');
+  });
+});

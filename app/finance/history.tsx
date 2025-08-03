@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import useSWR from 'swr'
 import { fetcher } from '../../lib/swr'
 import { useFinanceUpdates } from '../socket-context'
@@ -9,6 +9,8 @@ type HistoryItem = {
   date: string
   totalCost: number
 }
+
+type Action = { id: string; description: string }
 
 export default function FinanceHistoryPage() {
   const { data, mutate } = useSWR<HistoryItem[]>(
@@ -22,17 +24,49 @@ export default function FinanceHistoryPage() {
   }, [update, mutate])
   const history = data ?? []
 
+  const [selected, setSelected] = useState<HistoryItem | null>(null)
+  const { data: actions } = useSWR<Action[]>(
+    selected ? `/api/v1/report/budget/history/${selected.id}` : null,
+    fetcher,
+  )
+
   return (
     <div className="p-4">
       <h1 className="text-xl font-bold mb-4">Past Analyses</h1>
-      <ul className="space-y-2">
-        {history.map((item) => (
-          <li key={item.id} className="border p-2 rounded">
-            <p className="font-medium">{item.date}</p>
-            <p className="text-sm text-gray-500">Total Cost: ${item.totalCost}</p>
-          </li>
-        ))}
-      </ul>
+      {!selected && (
+        <ul className="space-y-2">
+          {history.map((item) => (
+            <li key={item.id}>
+              <button
+                onClick={() => setSelected(item)}
+                className="w-full text-left border p-2 rounded"
+              >
+                <p className="font-medium">{item.date}</p>
+                <p className="text-sm text-gray-500">Total Cost: ${item.totalCost}</p>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {selected && (
+        <div>
+          <h2 className="text-lg font-bold mb-2">{selected.date}</h2>
+          <p className="text-sm text-gray-500 mb-4">Total Cost: ${selected.totalCost}</p>
+          <div className="space-y-2 mb-4">
+            {(actions ?? []).map((action) => (
+              <div key={action.id} className="border p-2 rounded">
+                {action.description}
+              </div>
+            ))}
+          </div>
+          <button
+            onClick={() => setSelected(null)}
+            className="px-4 py-2 bg-gray-200 rounded"
+          >
+            Back
+          </button>
+        </div>
+      )}
     </div>
   )
 }
