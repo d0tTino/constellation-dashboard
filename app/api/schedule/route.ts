@@ -1,26 +1,22 @@
-const baseUrl = process.env.CASCADENCE_API_BASE_URL
-const token = process.env.CASCADENCE_API_TOKEN
+import { getEvents, addEvent, validateEvent } from './store'
 
 export async function GET() {
-  const res = await fetch(`${baseUrl}/schedule`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  })
-  const data = await res.json()
-  return Response.json(data, { status: res.status })
+  const events = await getEvents()
+  return Response.json(events)
 }
 
 export async function POST(req: Request) {
-  const body = await req.json()
-  const res = await fetch(`${baseUrl}/schedule`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  })
-  const data = await res.json()
-  return Response.json(data, { status: res.status })
+  let body: unknown
+  try {
+    body = await req.json()
+  } catch {
+    return Response.json({ error: 'Invalid JSON' }, { status: 400 })
+  }
+  try {
+    const event = validateEvent(body)
+    await addEvent(event)
+    return Response.json({ success: true })
+  } catch (e: any) {
+    return Response.json({ error: e.message }, { status: 400 })
+  }
 }

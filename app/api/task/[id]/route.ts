@@ -1,32 +1,34 @@
-const baseUrl = process.env.CASCADENCE_API_BASE_URL
-const token = process.env.CASCADENCE_API_TOKEN
+import { getEvent, updateEvent, validateEventPatch } from '../../schedule/store'
 
 export async function GET(
   _req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
-  const res = await fetch(`${baseUrl}/task/${params.id}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  })
-  const data = await res.json()
-  return Response.json(data, { status: res.status })
+  const event = await getEvent(params.id)
+  if (!event) {
+    return new Response('Not found', { status: 404 })
+  }
+  return Response.json(event)
 }
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
-  const body = await req.json()
-  const res = await fetch(`${baseUrl}/task/${params.id}`, {
-    method: 'PATCH',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  })
-  const data = await res.json()
-  return Response.json(data, { status: res.status })
+  let body: unknown
+  try {
+    body = await req.json()
+  } catch {
+    return Response.json({ error: 'Invalid JSON' }, { status: 400 })
+  }
+  try {
+    const patch = validateEventPatch(body)
+    await updateEvent(params.id, patch)
+    return Response.json({ success: true })
+  } catch (e: any) {
+    if (e.message === 'Not found') {
+      return new Response('Not found', { status: 404 })
+    }
+    return Response.json({ error: e.message }, { status: 400 })
+  }
 }

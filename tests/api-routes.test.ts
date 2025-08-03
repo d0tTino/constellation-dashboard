@@ -1,4 +1,7 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, afterEach } from 'vitest'
+import { promises as fs } from 'fs'
+import os from 'os'
+import path from 'path'
 
 // Helper to reload modules so that their shared state is reset between tests
 async function loadScheduleModules() {
@@ -9,34 +12,19 @@ async function loadScheduleModules() {
 }
 
 describe('schedule API routes', () => {
+  const file = path.join(os.tmpdir(), 'events.test.json')
+
+  afterEach(async () => {
+    await fs.unlink(file).catch(() => {})
+    delete process.env.SCHEDULE_DATA_FILE
+  })
+
   it('handles GET and POST', async () => {
-    process.env.CASCADENCE_API_BASE_URL = 'http://cascadence.test'
-    process.env.CASCADENCE_API_TOKEN = 'token'
-
-    const mockEvents = [
-      { id: '1', title: 'Sample Event', start: '2024-01-01' },
-    ]
-
-    const fetchMock = vi
-      .spyOn(globalThis, 'fetch')
-      .mockImplementation(async (input, init) => {
-        const url = input.toString()
-        const base = process.env.CASCADENCE_API_BASE_URL
-        const method = (init?.method ?? 'GET').toUpperCase()
-        if (url === `${base}/schedule`) {
-          if (method === 'GET') {
-            return new Response(JSON.stringify(mockEvents), { status: 200 })
-          }
-          if (method === 'POST') {
-            const body = JSON.parse(init!.body as string)
-            mockEvents.push(body)
-            return new Response(JSON.stringify({ success: true }), {
-              status: 200,
-            })
-          }
-        }
-        throw new Error('Unexpected call')
-      })
+    process.env.SCHEDULE_DATA_FILE = file
+    await fs.writeFile(
+      file,
+      JSON.stringify([{ id: '1', title: 'Sample Event', start: '2024-01-01' }]),
+    )
 
     const {
       schedule: { GET, POST },
@@ -57,54 +45,15 @@ describe('schedule API routes', () => {
     res = await GET()
     events = await res.json()
     expect(events).toHaveLength(2)
-    expect(events.find((e: any) => e.id === newEvent.id)).toMatchObject(
-      newEvent,
-    )
-
-    fetchMock.mockRestore()
+    expect(events.find((e: any) => e.id === newEvent.id)).toMatchObject(newEvent)
   })
 
   it('handles PATCH via task API', async () => {
-    process.env.CASCADENCE_API_BASE_URL = 'http://cascadence.test'
-    process.env.CASCADENCE_API_TOKEN = 'token'
-
-    const mockEvents: any[] = []
-    const fetchMock = vi
-      .spyOn(globalThis, 'fetch')
-      .mockImplementation(async (input, init) => {
-        const url = input.toString()
-        const base = process.env.CASCADENCE_API_BASE_URL
-        const method = (init?.method ?? 'GET').toUpperCase()
-        if (url === `${base}/schedule`) {
-          if (method === 'GET') {
-            return new Response(JSON.stringify(mockEvents), { status: 200 })
-          }
-          if (method === 'POST') {
-            const body = JSON.parse(init!.body as string)
-            mockEvents.push(body)
-            return new Response(JSON.stringify({ success: true }), {
-              status: 200,
-            })
-          }
-        }
-        const taskMatch = url.match(new RegExp(`${base}/task/(.+)`))
-        if (taskMatch && method === 'PATCH') {
-          const id = taskMatch[1]
-          const idx = mockEvents.findIndex(e => e.id === id)
-          if (idx === -1) {
-            return new Response('Not found', { status: 404 })
-          }
-          const body = JSON.parse(init!.body as string)
-          mockEvents[idx] = { ...mockEvents[idx], ...body }
-          return new Response(JSON.stringify({ success: true }), {
-            status: 200,
-          })
-        }
-        throw new Error('Unexpected call')
-      })
+    process.env.SCHEDULE_DATA_FILE = file
+    await fs.writeFile(file, '[]')
 
     const {
-      schedule: { GET, POST },
+      schedule: { POST, GET },
       task: { PATCH },
     } = await loadScheduleModules()
     const newEvent = { id: '3', title: 'Patch Test', start: '2024-05-01' }
@@ -128,8 +77,6 @@ describe('schedule API routes', () => {
     expect(events.find((e: any) => e.id === newEvent.id)).toMatchObject({
       start: '2024-06-01',
     })
-
-    fetchMock.mockRestore()
   })
 })
 
