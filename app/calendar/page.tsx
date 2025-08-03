@@ -20,6 +20,8 @@ interface Event {
   end?: string
   layer?: string
   shared?: boolean
+  invitees?: string[]
+  permissions?: string[]
 }
 
 interface CalendarData {

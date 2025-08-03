@@ -14,6 +14,8 @@ export interface CalendarEvent {
   end?: string
   layer?: string
   shared?: boolean
+  invitees?: string[]
+  permissions?: string[]
 }
 
 interface CalendarData {
@@ -66,7 +68,7 @@ export async function getEvent(id: string): Promise<CalendarEvent | undefined> {
 
 export function validateEvent(data: any): CalendarEvent {
   if (!data || typeof data !== 'object') throw new Error('Invalid payload')
-  const { id, title, start, end, layer, shared } = data
+  const { id, title, start, end, layer, shared, invitees, permissions } = data
   if (typeof id !== 'string' || typeof start !== 'string') {
     throw new Error('id and start are required')
   }
@@ -82,7 +84,13 @@ export function validateEvent(data: any): CalendarEvent {
   if (shared !== undefined && typeof shared !== 'boolean') {
     throw new Error('shared must be boolean')
   }
-  return { id, title, start, end, layer, shared }
+  if (invitees !== undefined && !Array.isArray(invitees)) {
+    throw new Error('invitees must be array')
+  }
+  if (permissions !== undefined && !Array.isArray(permissions)) {
+    throw new Error('permissions must be array')
+  }
+  return { id, title, start, end, layer, shared, invitees, permissions }
 }
 
 export function validateEventPatch(data: any): Partial<CalendarEvent> {
@@ -107,6 +115,14 @@ export function validateEventPatch(data: any): Partial<CalendarEvent> {
   if (data.shared !== undefined) {
     if (typeof data.shared !== 'boolean') throw new Error('shared must be boolean')
     result.shared = data.shared
+  }
+  if (data.invitees !== undefined) {
+    if (!Array.isArray(data.invitees)) throw new Error('invitees must be array')
+    result.invitees = data.invitees
+  }
+  if (data.permissions !== undefined) {
+    if (!Array.isArray(data.permissions)) throw new Error('permissions must be array')
+    result.permissions = data.permissions
   }
   if (data.id !== undefined) {
     throw new Error('id cannot be updated')
