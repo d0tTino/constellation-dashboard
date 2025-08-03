@@ -1,0 +1,34 @@
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { act } from 'react-dom/test-utils';
+
+let swrMock: any;
+vi.mock('swr', () => ({ __esModule: true, default: (...args: any[]) => swrMock(...args) }));
+vi.mock('../app/socket-context', () => ({ __esModule: true, useFinanceUpdates: () => null }));
+
+import FinanceHistoryPage from '../app/finance/history';
+
+function render(ui: React.ReactElement) {
+  const container = document.createElement('div');
+  document.body.appendChild(container);
+  const root = ReactDOM.createRoot(container);
+  act(() => {
+    root.render(ui);
+  });
+  return { container, root };
+}
+
+describe('FinanceHistoryPage', () => {
+  beforeEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  it('lists past analyses', () => {
+    swrMock = vi.fn(() => ({ data: [{ id: '1', date: '2024-01-01', totalCost: 123 }], mutate: vi.fn() }));
+    const { container } = render(<FinanceHistoryPage />);
+    expect(container.textContent).toContain('2024-01-01');
+    expect(container.textContent).toContain('Total Cost: $123');
+  });
+});
+
