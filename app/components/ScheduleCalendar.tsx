@@ -1,10 +1,11 @@
 'use client'
 
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import FullCalendar from '@fullcalendar/react'
-import dayGridPlugin from '@fullcalendar/daygrid'
+import dayGridPlugin, { DayCellContentArg } from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
-import interactionPlugin, { EventDropArg } from '@fullcalendar/interaction'
+import interactionPlugin, { EventDropArg, DateClickArg } from '@fullcalendar/interaction'
+import { EventContentArg, EventMountArg } from '@fullcalendar/core'
 import { useCalendarEvents } from '../socket-context'
 
 interface Layer {
@@ -20,6 +21,8 @@ interface Event {
   end?: string
   layer?: string
   shared?: boolean
+  invitees?: string[]
+  permissions?: string[]
 }
 
 interface ScheduleCalendarProps {
@@ -31,6 +34,7 @@ interface ScheduleCalendarProps {
 
 export default function ScheduleCalendar({ events, layers, visibleLayers, mutate }: ScheduleCalendarProps) {
   const event = useCalendarEvents()
+  const [selectedDate, setSelectedDate] = useState<string | null>(null)
 
   useEffect(() => {
     if (event) mutate()
@@ -47,6 +51,85 @@ export default function ScheduleCalendar({ events, layers, visibleLayers, mutate
         borderColor: color
       }
     })
+
+  const handleEventMount = (info: EventMountArg) => {
+    const shared = info.event.extendedProps.shared
+    const invitees: string[] = info.event.extendedProps.invitees || []
+    const permissions: string[] = info.event.extendedProps.permissions || []
+    if (info.view.type === 'dayGridMonth') {
+      info.el.style.display = 'none'
+      return
+    }
+    if (shared) {
+      info.el.classList.add('border-2', 'border-dashed')
+      const icon = document.createElement('span')
+      icon.textContent = '👥'
+      icon.className = 'mr-1'
+      info.el.prepend(icon)
+    }
+    if (invitees.length || permissions.length) {
+      info.el.title = `Invitees: ${invitees.join(', ')}\nPermissions: ${permissions.join(', ')}`
+    }
+    const color = info.event.backgroundColor || info.event.extendedProps.backgroundColor
+    if (color) {
+      info.el.style.backgroundColor = color
+      info.el.style.borderColor = color
+    }
+  }
+
+  const renderEventContent = (arg: EventContentArg) => {
+    if (arg.view.type === 'dayGridMonth') return null
+    const shared = arg.event.extendedProps.shared
+    return (
+      <div className="flex items-center">
+        {shared && <span className="mr-1">👥</span>}
+        <span>{arg.event.title}</span>
+      </div>
+    )
+  }
+
+  const renderDayCell = (arg: DayCellContentArg) => {
+    const dateStr = arg.date.toISOString().split('T')[0]
+    const dayEvents = filtered.filter(e => e.start.split('T')[0] === dateStr)
+    if (selectedDate === dateStr) {
+      return (
+        <div>
+          <div className="fc-daygrid-day-number">{arg.dayNumberText}</div>
+          <ul className="mt-1 text-xs">
+            {dayEvents.map(e => (
+              <li key={e.id} className="flex items-center">
+                <span
+                  className="w-2 h-2 rounded-full mr-1"
+                  style={{ backgroundColor: e.backgroundColor, border: e.shared ? '1px solid black' : 'none' }}
+                />
+                {e.shared && <span className="mr-1">👥</span>}
+                {e.title || '(no title)'}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )
+    }
+    return (
+      <div>
+        <div className="fc-daygrid-day-number">{arg.dayNumberText}</div>
+        <div className="flex flex-wrap gap-1 mt-1">
+          {dayEvents.map(e => (
+            <span
+              key={e.id}
+              className="w-2 h-2 rounded-full"
+              style={{ backgroundColor: e.backgroundColor, border: e.shared ? '1px solid black' : 'none' }}
+            />
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  const handleDateClick = (arg: DateClickArg) => {
+    const dateStr = arg.dateStr
+    setSelectedDate(prev => (prev === dateStr ? null : dateStr))
+  }
 
   const handleDrop = async (arg: EventDropArg) => {
     await fetch(`/api/task/${arg.event.id}`, {
@@ -69,6 +152,10 @@ export default function ScheduleCalendar({ events, layers, visibleLayers, mutate
       events={filtered}
       editable
       eventDrop={handleDrop}
+      eventDidMount={handleEventMount}
+      eventContent={renderEventContent}
+      dayCellContent={renderDayCell}
+      dateClick={handleDateClick}
     />
   )
 }
