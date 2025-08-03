@@ -2,6 +2,15 @@ import { describe, it, expect, vi, afterEach } from 'vitest'
 import { promises as fs } from 'fs'
 import os from 'os'
 import path from 'path'
+import { getServerSession } from 'next-auth'
+
+vi.mock('next-auth', async () => {
+  const actual = await vi.importActual<any>('next-auth')
+  return {
+    ...actual,
+    getServerSession: vi.fn(),
+  }
+})
 
 // Helper to reload modules so that their shared state is reset between tests
 async function loadScheduleModules() {
@@ -17,6 +26,7 @@ describe('schedule API routes', () => {
   afterEach(async () => {
     await fs.unlink(file).catch(() => {})
     delete process.env.SCHEDULE_DATA_FILE
+    vi.clearAllMocks()
   })
 
   it('handles GET and POST', async () => {
@@ -25,6 +35,8 @@ describe('schedule API routes', () => {
       file,
       JSON.stringify([{ id: '1', title: 'Sample Event', start: '2024-01-01' }]),
     )
+
+    vi.mocked(getServerSession).mockResolvedValue({ user: { id: '1' } })
 
     const {
       schedule: { GET, POST },
@@ -52,6 +64,8 @@ describe('schedule API routes', () => {
     process.env.SCHEDULE_DATA_FILE = file
     await fs.writeFile(file, '[]')
 
+    vi.mocked(getServerSession).mockResolvedValue({ user: { id: '1' } })
+
     const {
       schedule: { POST, GET },
       task: { PATCH },
@@ -77,6 +91,19 @@ describe('schedule API routes', () => {
     expect(events.find((e: any) => e.id === newEvent.id)).toMatchObject({
       start: '2024-06-01',
     })
+  })
+
+  it('returns 401 when unauthenticated', async () => {
+    process.env.SCHEDULE_DATA_FILE = file
+    await fs.writeFile(file, '[]')
+
+    vi.mocked(getServerSession).mockResolvedValue(null)
+
+    const {
+      schedule: { GET },
+    } = await loadScheduleModules()
+    const res = await GET()
+    expect(res.status).toBe(401)
   })
 })
 
