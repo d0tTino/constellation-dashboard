@@ -1,46 +1,72 @@
 import { promises as fs } from 'fs'
 import path from 'path'
 
+export interface CalendarLayer {
+  id: string
+  name: string
+  color: string
+}
+
 export interface CalendarEvent {
   id: string
   title?: string
   start: string
   end?: string
+  layer?: string
+  shared?: boolean
+}
+
+interface CalendarData {
+  events: CalendarEvent[]
+  layers: CalendarLayer[]
 }
 
 const dataFile =
   process.env.SCHEDULE_DATA_FILE ||
   path.join(process.cwd(), 'app/api/schedule/events.json')
 
-async function read(): Promise<CalendarEvent[]> {
+async function read(): Promise<CalendarData> {
   try {
     const text = await fs.readFile(dataFile, 'utf8')
-    return JSON.parse(text)
+    const data = JSON.parse(text)
+    return {
+      events: data.events || [],
+      layers: data.layers || []
+    }
   } catch (err: any) {
     if (err.code === 'ENOENT') {
-      await fs.writeFile(dataFile, '[]', 'utf8')
-      return []
+      const empty: CalendarData = { events: [], layers: [] }
+      await fs.writeFile(dataFile, JSON.stringify(empty, null, 2), 'utf8')
+      return empty
     }
     throw err
   }
 }
 
-async function write(events: CalendarEvent[]): Promise<void> {
-  await fs.writeFile(dataFile, JSON.stringify(events, null, 2), 'utf8')
+async function write(data: CalendarData): Promise<void> {
+  await fs.writeFile(dataFile, JSON.stringify(data, null, 2), 'utf8')
 }
 
-export async function getEvents(): Promise<CalendarEvent[]> {
+export async function getData(): Promise<CalendarData> {
   return read()
 }
 
+export async function getEvents(): Promise<CalendarEvent[]> {
+  return (await read()).events
+}
+
+export async function getLayers(): Promise<CalendarLayer[]> {
+  return (await read()).layers
+}
+
 export async function getEvent(id: string): Promise<CalendarEvent | undefined> {
-  const events = await read()
-  return events.find(e => e.id === id)
+  const data = await read()
+  return data.events.find(e => e.id === id)
 }
 
 export function validateEvent(data: any): CalendarEvent {
   if (!data || typeof data !== 'object') throw new Error('Invalid payload')
-  const { id, title, start, end } = data
+  const { id, title, start, end, layer, shared } = data
   if (typeof id !== 'string' || typeof start !== 'string') {
     throw new Error('id and start are required')
   }
@@ -50,7 +76,13 @@ export function validateEvent(data: any): CalendarEvent {
   if (end !== undefined && typeof end !== 'string') {
     throw new Error('end must be string')
   }
-  return { id, title, start, end }
+  if (layer !== undefined && typeof layer !== 'string') {
+    throw new Error('layer must be string')
+  }
+  if (shared !== undefined && typeof shared !== 'boolean') {
+    throw new Error('shared must be boolean')
+  }
+  return { id, title, start, end, layer, shared }
 }
 
 export function validateEventPatch(data: any): Partial<CalendarEvent> {
@@ -68,6 +100,14 @@ export function validateEventPatch(data: any): Partial<CalendarEvent> {
     if (typeof data.end !== 'string') throw new Error('end must be string')
     result.end = data.end
   }
+  if (data.layer !== undefined) {
+    if (typeof data.layer !== 'string') throw new Error('layer must be string')
+    result.layer = data.layer
+  }
+  if (data.shared !== undefined) {
+    if (typeof data.shared !== 'boolean') throw new Error('shared must be boolean')
+    result.shared = data.shared
+  }
   if (data.id !== undefined) {
     throw new Error('id cannot be updated')
   }
@@ -76,18 +116,18 @@ export function validateEventPatch(data: any): Partial<CalendarEvent> {
 }
 
 export async function addEvent(event: CalendarEvent): Promise<void> {
-  const events = await read()
-  events.push(event)
-  await write(events)
+  const data = await read()
+  data.events.push(event)
+  await write(data)
 }
 
 export async function updateEvent(
   id: string,
   patch: Partial<CalendarEvent>,
 ): Promise<void> {
-  const events = await read()
-  const idx = events.findIndex(e => e.id === id)
+  const data = await read()
+  const idx = data.events.findIndex(e => e.id === id)
   if (idx === -1) throw new Error('Not found')
-  events[idx] = { ...events[idx], ...patch }
-  await write(events)
+  data.events[idx] = { ...data.events[idx], ...patch }
+  await write(data)
 }

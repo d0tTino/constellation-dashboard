@@ -1,4 +1,4 @@
-import { getEvents, addEvent, validateEvent } from './store'
+import { getData, addEvent, validateEvent } from './store'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../auth/[...nextauth]/route'
 
@@ -7,8 +7,8 @@ export async function GET() {
   if (!session) {
     return new Response('Unauthorized', { status: 401 })
   }
-  const events = await getEvents()
-  return Response.json(events)
+  const data = await getData()
+  return Response.json(data)
 }
 
 export async function POST(req: Request) {
