@@ -1,13 +1,20 @@
 import { describe, it, expect } from 'vitest'
 
 describe('budget history API route', () => {
-  it('returns past analyses', async () => {
+  it('returns history scoped to context', async () => {
     const { GET } = await import('../app/api/v1/report/budget/history/route')
-    const res = await GET()
-    const data = await res.json()
-    expect(data).toEqual([
+    const resPersonal = await GET(new Request('http://test', { headers: { cookie: 'context=personal' } }))
+    const dataPersonal = await resPersonal.json()
+    expect(dataPersonal).toEqual([
       { id: '1', date: '2024-01-01', totalCost: 1200 },
       { id: '2', date: '2024-02-01', totalCost: 1300 },
+    ])
+
+    const resGroup = await GET(new Request('http://test', { headers: { cookie: 'context=group' } }))
+    const dataGroup = await resGroup.json()
+    expect(dataGroup).toEqual([
+      { id: 'g1', date: '2024-01-01', totalCost: 5000 },
+      { id: 'g2', date: '2024-02-01', totalCost: 5200 },
     ])
   })
 })

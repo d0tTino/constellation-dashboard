@@ -6,6 +6,7 @@ import { SWRProvider } from '../lib/swr';
 import Link from 'next/link';
 import { SessionProvider, signIn, signOut, useSession } from 'next-auth/react';
 import { ThemeProvider, useTheme } from './theme-context';
+import ContextSwitcher from './components/ContextSwitcher';
 
 export const metadata = {
   title: 'Constellation Dashboard',
@@ -59,6 +60,7 @@ function ShellContent({
           ) : (
             <button type="button" onClick={() => signIn()}>Sign in</button>
           )}
+          <ContextSwitcher />
           <button type="button" onClick={toggleTheme}>Toggle Theme</button>
         </nav>
         {children}
