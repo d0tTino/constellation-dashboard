@@ -10,7 +10,11 @@ type IdeaSeed = {
 }
 
 export default function IdeaSeedList() {
-  const { data: ideaSeeds = [], mutate } = useSWR<IdeaSeed[]>('/api/ume/idea-seeds', fetcher)
+  const { data: ideaSeeds = [], mutate } = useSWR<IdeaSeed[]>(
+    '/api/ume/idea-seeds',
+    fetcher,
+    { refreshInterval: 30000 },
+  )
   const [newIdeaText, setNewIdeaText] = useState('')
 
   const createIdea = async () => {

@@ -10,7 +10,11 @@ const ForceGraph2D = dynamic(
 )
 
 export default function MemoryGraphPanel() {
-  const { data } = useSWR<{ nodes: any[]; edges: any[] }>('/api/memory/graph', fetcher)
+  const { data } = useSWR<{ nodes: any[]; edges: any[] }>(
+    '/api/memory/graph',
+    fetcher,
+    { refreshInterval: 30000 },
+  )
 
   const graphData = {
     nodes: data?.nodes ?? [],
