@@ -11,7 +11,11 @@ type HistoryItem = {
 }
 
 export default function FinanceHistoryPage() {
-  const { data, mutate } = useSWR<HistoryItem[]>('/api/v1/report/budget/history', fetcher)
+  const { data, mutate } = useSWR<HistoryItem[]>(
+    '/api/v1/report/budget/history',
+    fetcher,
+    { refreshInterval: 30000 },
+  )
   const update = useFinanceUpdates()
   useEffect(() => {
     if (update) mutate()

@@ -10,6 +10,7 @@ export default function FinancePanel() {
   const { data, mutate } = useSWR<BudgetOption[]>(
     `/api/v1/report/budget?budget=${budget}&payoffTime=${payoffTime}`,
     fetcher,
+    { refreshInterval: 30000 },
   )
 
   const ranked = rankBudgetOptions(

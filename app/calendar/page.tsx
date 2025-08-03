@@ -28,7 +28,11 @@ interface CalendarData {
 }
 
 export default function CalendarPage() {
-  const { data = { events: [], layers: [] } as CalendarData, mutate } = useSWR<CalendarData>('/api/schedule', fetcher)
+  const { data = { events: [], layers: [] } as CalendarData, mutate } = useSWR<CalendarData>(
+    '/api/schedule',
+    fetcher,
+    { refreshInterval: 30000 },
+  )
   const [title, setTitle] = useState('')
   const [start, setStart] = useState('')
   const [end, setEnd] = useState('')
