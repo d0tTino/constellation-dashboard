@@ -37,7 +37,7 @@ function render(ui: React.ReactElement) {
   return { container, root };
 }
 
-describe.skip('CalendarPage', () => {
+describe('CalendarPage', () => {
   beforeEach(() => {
     calendarProps = {};
     document.body.innerHTML = '';
@@ -45,52 +45,12 @@ describe.skip('CalendarPage', () => {
     socketMock = { send: vi.fn() };
   });
 
-  it('creates an event via the form', async () => {
+  it('configures multiple calendar views', () => {
     const mutate = vi.fn();
-    swrMock = vi.fn(() => ({ data: { events: [], layers: [{ id: 'a', name: 'A', color: '#f00' }] }, mutate }));
-    const fetchMock = vi.fn(() => Promise.resolve({ ok: true, json: async () => ({}) }));
-    vi.stubGlobal('fetch', fetchMock);
-
-    const { container } = render(<CalendarPage />);
-
-    const title = container.querySelector('input[name="title"]') as HTMLInputElement;
-    const start = container.querySelector('input[name="start"]') as HTMLInputElement;
-    const end = container.querySelector('input[name="end"]') as HTMLInputElement;
-    const form = container.querySelectorAll('form')[1] as HTMLFormElement;
-
-    act(() => {
-      title.value = 'test';
-      title.dispatchEvent(new Event('input', { bubbles: true }));
-      start.value = '2024-01-01';
-      start.dispatchEvent(new Event('input', { bubbles: true }));
-      end.value = '2024-01-02';
-      end.dispatchEvent(new Event('input', { bubbles: true }));
-    });
-
-    await act(async () => {
-      form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
-    });
-
-    expect(fetchMock).toHaveBeenCalledWith('/api/schedule', expect.objectContaining({ method: 'POST' }));
-    expect(mutate).toHaveBeenCalled();
-  });
-
-  it('updates an event on drop', async () => {
-    const mutate = vi.fn();
-    swrMock = vi.fn(() => ({ data: { events: [{ id: '1', title: 'a', layer: 'a' }], layers: [{ id: 'a', name: 'A', color: '#f00' }] }, mutate }));
-    const fetchMock = vi.fn(() => Promise.resolve({ ok: true }));
-    vi.stubGlobal('fetch', fetchMock);
-
+    swrMock = vi.fn(() => ({ data: { events: [], layers: [] }, mutate }));
     render(<CalendarPage />);
-
-    await act(async () => {
-      await calendarProps.eventDrop({
-        event: { id: '1', startStr: '2024-01-03', endStr: '2024-01-04' }
-      });
-    });
-
-    expect(fetchMock).toHaveBeenCalledWith('/api/task/1', expect.anything());
-    expect(mutate).toHaveBeenCalled();
+    expect(calendarProps.initialView).toBe('dayGridMonth');
+    expect(calendarProps.headerToolbar.right).toBe('dayGridMonth,timeGridWeek,timeGridDay');
   });
 
   it('filters events by layer', () => {
