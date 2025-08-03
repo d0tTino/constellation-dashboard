@@ -6,6 +6,7 @@ import { fetcher } from '../../lib/swr'
 import ScheduleCalendar from '../components/ScheduleCalendar'
 import CalendarLayerPanel from '../components/CalendarLayerPanel'
 import { useSocket } from '../socket-context'
+import { useSession } from 'next-auth/react'
 
 interface Layer {
   id: string
@@ -36,10 +37,12 @@ export default function CalendarPage() {
   const [title, setTitle] = useState('')
   const [start, setStart] = useState('')
   const [end, setEnd] = useState('')
+  const [shared, setShared] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedLayers, setSelectedLayers] = useState<string[]>([])
 
   const socket = useSocket()
+  const { data: session } = useSession()
   const [nl, setNl] = useState('')
 
   useEffect(() => {
@@ -49,7 +52,16 @@ export default function CalendarPage() {
   const handleNL = (e: React.FormEvent) => {
     e.preventDefault()
     if (!nl) return
-    socket?.send(JSON.stringify({ type: 'calendar.nl.request', text: nl }))
+    const match = document.cookie.match(/(?:^|; )context=(personal|group)/)
+    const context = match ? match[1] : 'personal'
+    socket?.send(
+      JSON.stringify({
+        type: 'calendar.nl.request',
+        text: nl,
+        context,
+        user: session?.user?.id,
+      }),
+    )
     setNl('')
   }
 
@@ -57,18 +69,29 @@ export default function CalendarPage() {
     e.preventDefault()
     setError(null)
     const layer = selectedLayers[0]
+    const id = crypto.randomUUID()
     const res = await fetch('/api/schedule', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, start, end, layer })
+      body: JSON.stringify({ id, title, start, end, layer, shared })
     })
     if (!res.ok) {
-      setError('Failed to create event')
+      let message = 'Failed to create event'
+      try {
+        const data = await res.json()
+        message = data.error || message
+      } catch {
+        try {
+          message = await res.text()
+        } catch {}
+      }
+      setError(message)
       return
     }
     setTitle('')
     setStart('')
     setEnd('')
+    setShared(false)
     mutate()
   }
 
@@ -112,6 +135,16 @@ export default function CalendarPage() {
           onChange={e => setEnd(e.target.value)}
           className="border mr-2"
         />
+        <label className="mr-2">
+          <input
+            name="shared"
+            type="checkbox"
+            checked={shared}
+            onChange={e => setShared(e.target.checked)}
+            className="mr-1"
+          />
+          Shared
+        </label>
         <button type="submit" className="border px-2">Add</button>
       </form>
       {error && <p role="alert" className="text-red-500">{error}</p>}

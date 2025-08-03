@@ -24,6 +24,9 @@ vi.mock('../app/socket-context', () => ({
   useCalendarEvents: () => null,
   useFinanceUpdates: () => null,
 }));
+vi.mock('next-auth/react', () => ({
+  useSession: () => ({ data: { user: { id: 'user1' } } })
+}));
 
 import CalendarPage from '../app/calendar/page';
 
@@ -43,6 +46,7 @@ describe('CalendarPage', () => {
     document.body.innerHTML = '';
     vi.unstubAllGlobals();
     socketMock = { send: vi.fn() };
+    document.cookie = 'context=personal';
   });
 
   it('configures multiple calendar views', () => {
@@ -101,7 +105,33 @@ describe('CalendarPage', () => {
     });
 
     expect(socketMock.send).toHaveBeenCalledWith(
-      JSON.stringify({ type: 'calendar.nl.request', text: 'hello' })
+      JSON.stringify({ type: 'calendar.nl.request', text: 'hello', context: 'personal', user: 'user1' })
     );
+  });
+
+  it('surfaces API errors', async () => {
+    const mutate = vi.fn();
+    swrMock = vi.fn(() => ({ data: { events: [], layers: [{ id: 'a', name: 'A', color: '#f00' }] }, mutate }));
+
+    const fetchMock = vi.fn(() => Promise.resolve(new Response('Forbidden', { status: 403 })));
+    // @ts-ignore
+    global.fetch = fetchMock;
+
+    const { container } = render(<CalendarPage />);
+
+    const title = container.querySelector('input[name="title"]') as HTMLInputElement;
+    const form = title.closest('form') as HTMLFormElement;
+
+    act(() => {
+      title.value = 'event';
+      title.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+
+    await act(async () => {
+      form.dispatchEvent(new Event('submit', { bubbles: true }));
+    });
+
+    const alert = container.querySelector('[role="alert"]');
+    expect(alert?.textContent).toBe('Forbidden');
   });
 });
