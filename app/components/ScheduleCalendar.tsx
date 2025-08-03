@@ -1,24 +1,45 @@
 'use client'
 
-import React, { useEffect } from 'react'
+import React from 'react'
 import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
+import timeGridPlugin from '@fullcalendar/timegrid'
 import interactionPlugin, { EventDropArg } from '@fullcalendar/interaction'
-import useSWR from 'swr'
-import { fetcher } from '../../lib/swr'
 
-interface ScheduleCalendarProps {
-  onMutate?: (mutate: () => void) => void
+interface Layer {
+  id: string
+  name: string
+  color: string
 }
 
-export default function ScheduleCalendar({ onMutate }: ScheduleCalendarProps) {
-  const { data: events = [], mutate } = useSWR('/api/schedule', fetcher)
+interface Event {
+  id: string
+  title?: string
+  start: string
+  end?: string
+  layer?: string
+  shared?: boolean
+}
 
-  useEffect(() => {
-    if (onMutate) {
-      onMutate(mutate)
-    }
-  }, [mutate, onMutate])
+interface ScheduleCalendarProps {
+  events: Event[]
+  layers: Layer[]
+  visibleLayers: string[]
+  mutate: () => void
+}
+
+export default function ScheduleCalendar({ events, layers, visibleLayers, mutate }: ScheduleCalendarProps) {
+  const filtered = events
+    .filter(e => !e.layer || visibleLayers.includes(e.layer))
+    .map(e => {
+      const layer = layers.find(l => l.id === e.layer)
+      const color = layer?.color
+      return {
+        ...e,
+        backgroundColor: color,
+        borderColor: color
+      }
+    })
 
   const handleDrop = async (arg: EventDropArg) => {
     await fetch(`/api/task/${arg.event.id}`, {
@@ -31,12 +52,16 @@ export default function ScheduleCalendar({ onMutate }: ScheduleCalendarProps) {
 
   return (
     <FullCalendar
-      plugins={[dayGridPlugin, interactionPlugin]}
+      plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
       initialView="dayGridMonth"
-      events={events}
+      headerToolbar={{
+        left: 'prev,next today',
+        center: 'title',
+        right: 'dayGridMonth,timeGridWeek,timeGridDay'
+      }}
+      events={filtered}
       editable
       eventDrop={handleDrop}
     />
   )
 }
-

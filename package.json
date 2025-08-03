@@ -17,6 +17,7 @@
   "dependencies": {
     "@fullcalendar/daygrid": "^6.1.18",
     "@fullcalendar/interaction": "^6.1.18",
+    "@fullcalendar/timegrid": "^6.1.18",
     "@fullcalendar/react": "^6.1.18",
     "next": "^15.4.5",
     "next-auth": "^4.24.11",

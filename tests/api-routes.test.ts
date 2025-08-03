@@ -33,7 +33,7 @@ describe('schedule API routes', () => {
     process.env.SCHEDULE_DATA_FILE = file
     await fs.writeFile(
       file,
-      JSON.stringify([{ id: '1', title: 'Sample Event', start: '2024-01-01' }]),
+      JSON.stringify({ events: [{ id: '1', title: 'Sample Event', start: '2024-01-01' }], layers: [] }),
     )
 
     vi.mocked(getServerSession).mockResolvedValue({ user: { id: '1' } })
@@ -42,8 +42,8 @@ describe('schedule API routes', () => {
       schedule: { GET, POST },
     } = await loadScheduleModules()
     let res = await GET()
-    let events = await res.json()
-    expect(events).toHaveLength(1)
+    let data = await res.json()
+    expect(data.events).toHaveLength(1)
 
     const newEvent = { id: '2', title: 'Test', start: '2024-01-01' }
     const req = new Request('http://test', {
@@ -55,14 +55,14 @@ describe('schedule API routes', () => {
     expect(await postRes.json()).toEqual({ success: true })
 
     res = await GET()
-    events = await res.json()
-    expect(events).toHaveLength(2)
-    expect(events.find((e: any) => e.id === newEvent.id)).toMatchObject(newEvent)
+    data = await res.json()
+    expect(data.events).toHaveLength(2)
+    expect(data.events.find((e: any) => e.id === newEvent.id)).toMatchObject(newEvent)
   })
 
   it('handles PATCH via task API', async () => {
     process.env.SCHEDULE_DATA_FILE = file
-    await fs.writeFile(file, '[]')
+    await fs.writeFile(file, JSON.stringify({ events: [], layers: [] }))
 
     vi.mocked(getServerSession).mockResolvedValue({ user: { id: '1' } })
 
@@ -87,15 +87,15 @@ describe('schedule API routes', () => {
     expect(await patchRes.json()).toEqual({ success: true })
 
     const res = await GET()
-    const events = await res.json()
-    expect(events.find((e: any) => e.id === newEvent.id)).toMatchObject({
+    const data = await res.json()
+    expect(data.events.find((e: any) => e.id === newEvent.id)).toMatchObject({
       start: '2024-06-01',
     })
   })
 
   it('returns 401 when unauthenticated', async () => {
     process.env.SCHEDULE_DATA_FILE = file
-    await fs.writeFile(file, '[]')
+    await fs.writeFile(file, JSON.stringify({ events: [], layers: [] }))
 
     vi.mocked(getServerSession).mockResolvedValue(null)
 
