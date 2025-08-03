@@ -1,14 +1,34 @@
 'use client';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-const SocketContext = createContext<WebSocket | null>(null);
+interface SocketContextValue {
+  socket: WebSocket | null;
+  calendarEvent: any;
+  financeUpdate: any;
+}
+
+const SocketContext = createContext<SocketContextValue>({
+  socket: null,
+  calendarEvent: null,
+  financeUpdate: null,
+});
 
 export function useSocket() {
-  return useContext(SocketContext);
+  return useContext(SocketContext).socket;
+}
+
+export function useCalendarEvents() {
+  return useContext(SocketContext).calendarEvent;
+}
+
+export function useFinanceUpdates() {
+  return useContext(SocketContext).financeUpdate;
 }
 
 export function SocketProvider({ children }: { children: React.ReactNode }) {
   const [socket, setSocket] = useState<WebSocket | null>(null);
+  const [calendarEvent, setCalendarEvent] = useState<any>(null);
+  const [financeUpdate, setFinanceUpdate] = useState<any>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -34,6 +54,25 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
         console.error('WebSocket error:', event);
       };
 
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          switch (data.type) {
+            case 'calendar.event.created':
+              setCalendarEvent(data);
+              break;
+            case 'finance.decision.result':
+            case 'finance.explain.result':
+              setFinanceUpdate(data);
+              break;
+            default:
+              break;
+          }
+        } catch (err) {
+          console.error('Error parsing WebSocket message', err);
+        }
+      };
+
       ws.onclose = (event) => {
         console.error('WebSocket closed:', event);
         const delay = Math.min(10000, 1000 * 2 ** reconnectAttempts);
@@ -51,7 +90,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <SocketContext.Provider value={socket}>
+    <SocketContext.Provider value={{ socket, calendarEvent, financeUpdate }}>
       {children}
     </SocketContext.Provider>
   );

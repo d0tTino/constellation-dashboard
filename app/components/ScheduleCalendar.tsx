@@ -1,10 +1,11 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect } from 'react'
 import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import interactionPlugin, { EventDropArg } from '@fullcalendar/interaction'
+import { useCalendarEvents } from '../socket-context'
 
 interface Layer {
   id: string
@@ -29,6 +30,12 @@ interface ScheduleCalendarProps {
 }
 
 export default function ScheduleCalendar({ events, layers, visibleLayers, mutate }: ScheduleCalendarProps) {
+  const event = useCalendarEvents()
+
+  useEffect(() => {
+    if (event) mutate()
+  }, [event, mutate])
+
   const filtered = events
     .filter(e => !e.layer || visibleLayers.includes(e.layer))
     .map(e => {
