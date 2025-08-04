@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "next lint",
     "test": "NODE_OPTIONS=--max-old-space-size=4096 vitest run"
+
   },
   "keywords": [],
   "author": "",
