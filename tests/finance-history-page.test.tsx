@@ -46,6 +46,8 @@ describe('FinanceHistoryPage', () => {
     act(() => {
       btn.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
+    expect(swrMock.mock.calls.some(c => c[0] === '/api/v1/report/budget/history/1')).toBe(true);
+    expect(container.textContent).toContain('2024-01-01');
     expect(container.textContent).toContain('Cut coffee spend');
     const back = Array.from(container.querySelectorAll('button')).find((b) => b.textContent === 'Back') as HTMLButtonElement;
     act(() => {
