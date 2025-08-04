@@ -134,4 +134,64 @@ describe('CalendarPage', () => {
     const alert = container.querySelector('[role="alert"]');
     expect(alert?.textContent).toBe('Forbidden');
   });
+
+  it('creates events with id and shared flag', async () => {
+    const mutate = vi.fn();
+    swrMock = vi.fn(() => ({
+      data: { events: [], layers: [{ id: 'a', name: 'A', color: '#f00' }] },
+      mutate,
+    }));
+
+    const fetchMock = vi.fn(() => Promise.resolve(new Response('{}', { status: 200 })));
+    // @ts-ignore
+    global.fetch = fetchMock;
+    // @ts-ignore
+    global.crypto = { randomUUID: () => 'uuid-1' };
+
+    const { container } = render(<CalendarPage />);
+
+    const title = container.querySelector('input[name="title"]') as HTMLInputElement;
+    const start = container.querySelector('input[name="start"]') as HTMLInputElement;
+    const shared = container.querySelector('input[name="shared"]') as HTMLInputElement;
+    const form = title.closest('form') as HTMLFormElement;
+
+    act(() => {
+      title.value = 'event';
+      title.dispatchEvent(new Event('input', { bubbles: true }));
+      start.value = '2023-01-01';
+      start.dispatchEvent(new Event('input', { bubbles: true }));
+      shared.checked = true;
+      shared.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    await act(async () => {
+      form.dispatchEvent(new Event('submit', { bubbles: true }));
+    });
+
+    expect(fetchMock).toHaveBeenCalled();
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+    expect(body.id).toBe('uuid-1');
+    expect(body.shared).toBe(true);
+  });
+
+  it('renders shared events with distinctive styling', () => {
+    const mutate = vi.fn();
+    swrMock = vi.fn(() => ({
+      data: { events: [{ id: '1', title: 's', start: '2023-01-01', shared: true }], layers: [] },
+      mutate,
+    }));
+
+    render(<CalendarPage />);
+
+    const el = document.createElement('div');
+    const event = calendarProps.events[0];
+    calendarProps.eventDidMount({
+      event: { extendedProps: event, backgroundColor: event.backgroundColor },
+      el,
+      view: { type: 'timeGridWeek' },
+    });
+
+    expect(el.classList.contains('border-dashed')).toBe(true);
+    expect(el.firstChild?.textContent).toBe('👥');
+  });
 });

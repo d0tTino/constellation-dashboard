@@ -24,13 +24,26 @@ describe('FinancePage', () => {
     document.body.innerHTML = '';
   });
 
-  it('renders ranked options and shows details modal', () => {
+  it('labels options, highlights best choice, and shows modal content', () => {
     const mutate = vi.fn();
-    swrMock = vi.fn(() => ({ data: [{ category: 'Rent', amount: 1000, costOfDeviation: 0 }], mutate }));
+    swrMock = vi.fn(() => ({
+      data: [
+        { category: 'Rent', amount: 1000, costOfDeviation: 0 },
+        { category: 'Food', amount: 500, costOfDeviation: 100 },
+      ],
+      mutate,
+    }));
     const { container } = render(<FinancePage />);
-    const viewBtn = Array.from(container.querySelectorAll('button')).find(b => b.textContent === 'View Details') as HTMLButtonElement;
+    const cards = Array.from(container.querySelectorAll('.border.p-4.rounded.shadow')) as HTMLDivElement[];
+    expect(cards[0].textContent).toContain('Option A - Rent');
+    expect(cards[1].textContent).toContain('Option B - Food');
+    expect(cards[0].className).toContain('border-green-500');
+    expect(cards[0].className).toContain('bg-green-50');
+    expect(cards[1].className).not.toContain('border-green-500');
+    const viewBtn = cards[0].querySelector('button') as HTMLButtonElement;
     act(() => { viewBtn.click(); });
     expect(document.body.textContent).toContain('Payment schedule coming soon.');
+    expect(document.body.textContent).toContain('AI explanation coming soon.');
   });
 
   it('updates analysis parameters when inputs change', async () => {
