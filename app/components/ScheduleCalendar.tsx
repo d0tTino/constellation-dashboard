@@ -6,7 +6,7 @@ import dayGridPlugin, { DayCellContentArg } from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import interactionPlugin, { EventDropArg, DateClickArg } from '@fullcalendar/interaction'
 import { EventContentArg, EventMountArg } from '@fullcalendar/core'
-import { useCalendarEvents } from '../socket-context'
+import { useCalendarEvents, useTaskStatus } from '../socket-context'
 
 interface Layer {
   id: string
@@ -34,11 +34,16 @@ interface ScheduleCalendarProps {
 
 export default function ScheduleCalendar({ events, layers, visibleLayers, mutate }: ScheduleCalendarProps) {
   const event = useCalendarEvents()
+  const taskStatus = useTaskStatus()
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
 
   useEffect(() => {
     if (event) mutate()
   }, [event, mutate])
+
+  useEffect(() => {
+    if (taskStatus) mutate()
+  }, [taskStatus, mutate])
 
   const filtered = events
     .filter(e => !e.layer || visibleLayers.includes(e.layer))

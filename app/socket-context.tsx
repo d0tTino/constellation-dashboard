@@ -1,16 +1,23 @@
 'use client';
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import {
+  subscribeToTaskStatus,
+  getLatestTaskStatus,
+  TaskStatusEvent,
+} from '../lib/taskCascadence';
 
 interface SocketContextValue {
   socket: WebSocket | null;
   calendarEvent: any;
   financeUpdate: any;
+  taskStatus: TaskStatusEvent | null;
 }
 
 const SocketContext = createContext<SocketContextValue>({
   socket: null,
   calendarEvent: null,
   financeUpdate: null,
+  taskStatus: null,
 });
 
 export function useSocket() {
@@ -25,10 +32,15 @@ export function useFinanceUpdates() {
   return useContext(SocketContext).financeUpdate;
 }
 
+export function useTaskStatus() {
+  return useContext(SocketContext).taskStatus;
+}
+
 export function SocketProvider({ children }: { children: React.ReactNode }) {
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [calendarEvent, setCalendarEvent] = useState<any>(null);
   const [financeUpdate, setFinanceUpdate] = useState<any>(null);
+  const [taskStatus, setTaskStatus] = useState<TaskStatusEvent | null>(getLatestTaskStatus());
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -85,8 +97,15 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  useEffect(() => {
+    const unsubscribe = subscribeToTaskStatus(setTaskStatus);
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
   return (
-    <SocketContext.Provider value={{ socket, calendarEvent, financeUpdate }}>
+    <SocketContext.Provider value={{ socket, calendarEvent, financeUpdate, taskStatus }}>
       {children}
     </SocketContext.Provider>
   );

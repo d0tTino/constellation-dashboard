@@ -11,6 +11,7 @@ let emit: (value: number) => void;
 vi.mock('../app/socket-context', () => ({
   __esModule: true,
   useSocket: () => ws,
+  useTaskStatus: () => null,
 }));
 
 vi.mock('recharts', () => {

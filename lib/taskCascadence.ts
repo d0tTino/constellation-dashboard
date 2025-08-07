@@ -1,6 +1,8 @@
 'use client'
 
-type TaskStatusEvent = {
+import { useEffect, useState } from 'react'
+
+export type TaskStatusEvent = {
   type?: string
   [key: string]: any
 }
@@ -9,6 +11,7 @@ type Callback = (event: TaskStatusEvent) => void
 
 let ws: WebSocket | null = null
 const callbacks = new Set<Callback>()
+let latestStatus: TaskStatusEvent | null = null
 
 function ensureConnection() {
   if (ws || typeof window === 'undefined') return
@@ -22,6 +25,7 @@ function ensureConnection() {
     try {
       const data = JSON.parse(event.data)
       if (data.type === 'task.status') {
+        latestStatus = data
         callbacks.forEach(cb => cb(data))
       }
     } catch (err) {
@@ -43,5 +47,15 @@ export function subscribeToTaskStatus(callback: Callback) {
       ws = null
     }
   }
+}
+
+export function getLatestTaskStatus() {
+  return latestStatus
+}
+
+export function useTaskStatusStream() {
+  const [status, setStatus] = useState<TaskStatusEvent | null>(latestStatus)
+  useEffect(() => subscribeToTaskStatus(setStatus), [])
+  return status
 }
 

@@ -23,6 +23,7 @@ vi.mock('../app/socket-context', () => ({
   useSocket: () => socketMock,
   useCalendarEvents: () => null,
   useFinanceUpdates: () => null,
+  useTaskStatus: () => null,
 }));
 vi.mock('next-auth/react', () => ({
   useSession: () => ({ data: { user: { id: 'user1' } } })
