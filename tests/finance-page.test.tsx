@@ -5,7 +5,11 @@ import { act } from 'react-dom/test-utils';
 
 let swrMock: any;
 vi.mock('swr', () => ({ __esModule: true, default: (...args: any[]) => swrMock(...args) }));
-vi.mock('../app/socket-context', () => ({ __esModule: true, useFinanceUpdates: () => null }));
+vi.mock('../app/socket-context', () => ({
+  __esModule: true,
+  useFinanceUpdates: () => null,
+  useTaskStatus: () => null,
+}));
 
 import FinancePage from '../app/finance/page';
 
