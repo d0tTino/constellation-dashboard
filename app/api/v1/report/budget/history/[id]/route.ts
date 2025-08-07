@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '../../../../../auth/[...nextauth]/route'
 import { getRequestContext } from '../../../../../../../lib/context'
 
 type Action = { id: string; description: string }
@@ -25,8 +27,24 @@ const group: Record<string, Action[]> = {
   ],
 }
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(
+  req: Request,
+  { params }: { params: { id: string } },
+) {
+  const session = await getServerSession(authOptions)
+  if (!session) {
+    return new Response('Unauthorized', { status: 401 })
+  }
   const ctx = getRequestContext(req)
+  if (ctx === 'group') {
+    const cookie = req.headers.get('cookie') || ''
+    const match = cookie.match(/(?:^|; )context=([^;]+)/)
+    const requested = match ? decodeURIComponent(match[1]) : ''
+    const groups = session.user?.groups ?? []
+    if (!groups.includes(requested)) {
+      return new Response('Forbidden', { status: 403 })
+    }
+  }
   const actions = ctx === 'group' ? group[params.id] : personal[params.id]
   return NextResponse.json(actions ?? [])
 }
