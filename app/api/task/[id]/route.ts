@@ -2,6 +2,7 @@ import { getEvent, updateEvent, validateEventPatch } from '../../schedule/store'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../../auth/[...nextauth]/route'
 import { getRequestContext } from '../../../../lib/context'
+import { sendWsMessage } from '../../../../lib/ws-server'
 
 export async function GET(
   req: Request,
@@ -53,6 +54,8 @@ export async function PATCH(
   try {
     const patch = validateEventPatch(body)
     await updateEvent(params.id, patch)
+    const updated = { ...existing, ...patch }
+    sendWsMessage({ type: 'calendar.event.updated', event: updated })
     return Response.json({ success: true })
   } catch (e: any) {
     return Response.json({ error: e.message }, { status: 400 })

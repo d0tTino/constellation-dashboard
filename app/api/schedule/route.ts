@@ -2,6 +2,7 @@ import { getData, addEvent, validateEvent } from './store'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../auth/[...nextauth]/route'
 import { getRequestContext } from '../../../lib/context'
+import { sendWsMessage } from '../../../lib/ws-server'
 
 export async function GET(req: Request) {
   const session = await getServerSession(authOptions)
@@ -38,6 +39,7 @@ export async function POST(req: Request) {
       return new Response('Forbidden', { status: 403 })
     }
     await addEvent(event)
+    sendWsMessage({ type: 'calendar.event.created', event })
     return Response.json({ success: true })
   } catch (e: any) {
     return Response.json({ error: e.message }, { status: 400 })
