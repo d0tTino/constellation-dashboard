@@ -27,11 +27,12 @@ function render(ui: React.ReactElement) {
 
 describe('socket event propagation', () => {
   let onmessage: ((ev: any) => void) | null;
+  const originalEnv = process.env.NEXT_PUBLIC_WS_URL;
 
   beforeEach(() => {
     document.body.innerHTML = '';
     onmessage = null;
-    process.env.NEXT_PUBLIC_WS_URL = 'ws://example.test';
+    delete process.env.NEXT_PUBLIC_WS_URL;
     const wsInstance: any = {
       close: vi.fn(),
       set onmessage(fn) {
@@ -46,7 +47,11 @@ describe('socket event propagation', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
-    delete process.env.NEXT_PUBLIC_WS_URL;
+    if (originalEnv === undefined) {
+      delete process.env.NEXT_PUBLIC_WS_URL;
+    } else {
+      process.env.NEXT_PUBLIC_WS_URL = originalEnv;
+    }
   });
 
   it('refreshes calendar when an event is created', async () => {

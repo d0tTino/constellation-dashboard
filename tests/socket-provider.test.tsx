@@ -19,12 +19,16 @@ describe('SocketProvider', () => {
 
   beforeEach(() => {
     document.body.innerHTML = '';
-    process.env.NEXT_PUBLIC_WS_URL = 'ws://example.test';
+    delete process.env.NEXT_PUBLIC_WS_URL;
   });
 
   afterEach(() => {
     vi.unstubAllGlobals();
-    process.env.NEXT_PUBLIC_WS_URL = originalEnv;
+    if (originalEnv === undefined) {
+      delete process.env.NEXT_PUBLIC_WS_URL;
+    } else {
+      process.env.NEXT_PUBLIC_WS_URL = originalEnv;
+    }
   });
 
   it('provides a WebSocket instance after initialization', async () => {
@@ -46,7 +50,7 @@ describe('SocketProvider', () => {
 
     await act(async () => {});
 
-    expect(wsMock).toHaveBeenCalledWith('ws://example.test');
+    expect(wsMock).toHaveBeenCalledWith('ws://localhost:3001');
     expect(socket).toBe(wsInstance);
   });
 });

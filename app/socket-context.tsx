@@ -32,11 +32,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const url = process.env.NEXT_PUBLIC_WS_URL;
-    if (!url) {
-      console.error('WebSocket URL is not defined');
-      return;
-    }
+    const url = process.env.NEXT_PUBLIC_WS_URL ?? 'ws://localhost:3001';
 
     let ws: WebSocket;
     let reconnectAttempts = 0;
