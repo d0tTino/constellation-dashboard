@@ -24,6 +24,7 @@ describe('ContextSwitcher', () => {
     document.body.innerHTML = ''
     document.cookie = 'context=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/'
     vi.unstubAllGlobals()
+    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true)
     sessionMock = { data: { user: { id: '1', groups: ['team-a', 'team-b'] } } }
   })
 
