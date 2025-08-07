@@ -34,25 +34,25 @@ export default function CalendarPanel() {
     fetcher,
     { refreshInterval: 30000 },
   )
-  const [selectedLayers, setSelectedLayers] = useState<string[]>([])
+  const [visibleLayers, setVisibleLayers] = useState<string[]>([])
 
   useEffect(() => {
-    setSelectedLayers(data.layers.map(l => l.id))
+    setVisibleLayers(data.layers.map(l => l.id))
   }, [data.layers])
 
   const toggleLayer = (id: string) => {
-    setSelectedLayers(prev =>
+    setVisibleLayers(prev =>
       prev.includes(id) ? prev.filter(l => l !== id) : [...prev, id]
     )
   }
 
   return (
     <div>
-      <CalendarLayerPanel layers={data.layers} selected={selectedLayers} onToggle={toggleLayer} />
+      <CalendarLayerPanel layers={data.layers} selected={visibleLayers} onToggle={toggleLayer} />
       <ScheduleCalendar
         events={data.events}
         layers={data.layers}
-        visibleLayers={selectedLayers}
+        visibleLayers={visibleLayers}
         mutate={mutate}
       />
     </div>
