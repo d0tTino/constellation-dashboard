@@ -6,7 +6,7 @@ import { getPanels } from '../lib/panels'
 describe('panel registry', () => {
   it('loads all configured panels', async () => {
     const panels = await getPanels()
-    expect(panels).toHaveLength(8)
+    expect(panels).toHaveLength(9)
     for (const panel of panels) {
       expect(panel.id).toBeTruthy()
       expect(panel.title).toBeTruthy()
@@ -26,6 +26,7 @@ describe('panel registry', () => {
       'invest',
       'idea-garden',
       'memory-graph',
+      'task-status',
       'settings',
     ])
     expect(titles).toEqual([
@@ -36,6 +37,7 @@ describe('panel registry', () => {
       'Invest Panel',
       'Idea Garden Panel',
       'Memory Graph Panel',
+      'Task Status Panel',
       'Settings Panel',
     ])
   })
