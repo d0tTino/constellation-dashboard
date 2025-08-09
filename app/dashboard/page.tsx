@@ -25,6 +25,8 @@ export default function DashboardPage() {
     const saved = window.localStorage.getItem(storageKey)
     if (saved) {
       setLayout(JSON.parse(saved))
+    } else {
+      setLayout([{ i: 'task-status', x: 0, y: 0, w: 3, h: 2 }])
     }
   }, [])
 
