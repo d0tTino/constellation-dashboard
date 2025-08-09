@@ -152,7 +152,7 @@ describe('schedule API routes', () => {
 describe('budget report API route', () => {
   it('returns personal and group budget data based on context', async () => {
     vi.mocked(getServerSession).mockResolvedValue({
-      user: { id: '1', groups: ['group'] },
+      user: { id: '1', groups: ['team-a'] },
     })
     const { GET } = await import('../app/api/v1/report/budget/route')
     const resPersonal = await GET(
@@ -166,7 +166,7 @@ describe('budget report API route', () => {
     ])
 
     const resGroup = await GET(
-      new Request('http://test', { headers: { cookie: 'context=group' } }),
+      new Request('http://test', { headers: { cookie: 'context=team-a' } }),
     )
     const dataGroup = await resGroup.json()
     expect(dataGroup).toEqual([

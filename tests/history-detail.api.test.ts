@@ -12,7 +12,7 @@ vi.mock('next-auth', async () => {
 describe('budget history detail API route', () => {
   it('returns actions scoped to context', async () => {
     vi.mocked(getServerSession).mockResolvedValue({
-      user: { id: '1', groups: ['group'] },
+      user: { id: '1', groups: ['team-a'] },
     })
     const { GET } = await import('../app/api/v1/report/budget/history/[id]/route')
 
@@ -26,7 +26,7 @@ describe('budget history detail API route', () => {
     ])
 
     const resGroup = await GET(
-      new Request('http://test', { headers: { cookie: 'context=group' } }),
+      new Request('http://test', { headers: { cookie: 'context=team-a' } }),
       { params: { id: 'g1' } },
     )
     const dataGroup = await resGroup.json()
