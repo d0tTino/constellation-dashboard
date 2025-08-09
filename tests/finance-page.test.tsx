@@ -5,10 +5,11 @@ import { act } from 'react-dom/test-utils';
 
 let swrMock: any;
 let send: any;
+let financeUpdate: any;
 vi.mock('swr', () => ({ __esModule: true, default: (...args: any[]) => swrMock(...args) }));
 vi.mock('../app/socket-context', () => ({
   __esModule: true,
-  useFinanceUpdates: () => null,
+  useFinanceUpdates: () => financeUpdate,
   useTaskStatus: () => null,
   useSocket: () => ({ send }),
 }));
@@ -29,6 +30,7 @@ describe('FinancePage', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
     send = vi.fn();
+    financeUpdate = null;
   });
 
   it('labels options, highlights best choice, and shows modal content', () => {
@@ -40,7 +42,7 @@ describe('FinancePage', () => {
       ],
       mutate,
     }));
-    const { container } = render(<FinancePage />);
+    const { container, root } = render(<FinancePage />);
     const cards = Array.from(container.querySelectorAll('.border.p-4.rounded.shadow')) as HTMLDivElement[];
     expect(cards[0].textContent).toContain('Option A - Rent');
     expect(cards[1].textContent).toContain('Option B - Food');
@@ -57,6 +59,28 @@ describe('FinancePage', () => {
     );
     expect(document.body.textContent).toContain('Payment schedule coming soon.');
     expect(document.body.textContent).toContain('AI explanation coming soon.');
+
+    financeUpdate = {
+      type: 'finance.decision.result',
+      category: 'Rent',
+      paymentSchedule: ['Installment 1'],
+    };
+    act(() => {
+      root.render(<FinancePage />);
+    });
+    expect(document.body.textContent).not.toContain('Payment schedule coming soon.');
+    expect(document.body.textContent).toContain('Installment 1');
+
+    financeUpdate = {
+      type: 'finance.explain.result',
+      category: 'Rent',
+      explanation: 'Because it saves money',
+    };
+    act(() => {
+      root.render(<FinancePage />);
+    });
+    expect(document.body.textContent).not.toContain('AI explanation coming soon.');
+    expect(document.body.textContent).toContain('Because it saves money');
   });
 
   it('updates analysis parameters when inputs change', async () => {
