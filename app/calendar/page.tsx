@@ -54,8 +54,8 @@ export default function CalendarPage() {
   const handleNL = (e: React.FormEvent) => {
     e.preventDefault()
     if (!nl) return
-    const match = document.cookie.match(/(?:^|; )context=(personal|group)/)
-    const context = match ? match[1] : 'personal'
+    const match = document.cookie.match(/(?:^|; )context=([^;]+)/)
+    const context = match ? (match[1] === 'personal' ? 'personal' : 'group') : 'personal'
     socket?.send(
       JSON.stringify({
         type: 'calendar.nl.request',
