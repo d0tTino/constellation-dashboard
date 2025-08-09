@@ -87,7 +87,7 @@ describe('CalendarPage', () => {
     ]);
   });
 
-  it('sends NL command', async () => {
+  it('sends NL command with personal context', async () => {
     const mutate = vi.fn();
     swrMock = vi.fn(() => ({ data: { events: [], layers: [] }, mutate }));
 
@@ -107,6 +107,30 @@ describe('CalendarPage', () => {
 
     expect(socketMock.send).toHaveBeenCalledWith(
       JSON.stringify({ type: 'calendar.nl.request', text: 'hello', context: 'personal', user: 'user1' })
+    );
+  });
+
+  it('sends NL command with group context', async () => {
+    document.cookie = 'context=team-a';
+    const mutate = vi.fn();
+    swrMock = vi.fn(() => ({ data: { events: [], layers: [] }, mutate }));
+
+    const { container } = render(<CalendarPage />);
+
+    const input = container.querySelector('input[name="nl"]') as HTMLInputElement;
+    const form = container.querySelector('form') as HTMLFormElement;
+
+    act(() => {
+      input.value = 'hi';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+
+    await act(async () => {
+      form.dispatchEvent(new Event('submit', { bubbles: true }));
+    });
+
+    expect(socketMock.send).toHaveBeenCalledWith(
+      JSON.stringify({ type: 'calendar.nl.request', text: 'hi', context: 'group', user: 'user1' })
     );
   });
 
