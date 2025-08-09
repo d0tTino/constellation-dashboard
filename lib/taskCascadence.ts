@@ -53,7 +53,7 @@ export function getLatestTaskStatus() {
   return latestStatus
 }
 
-export function useTaskStatusStream() {
+export function useTaskStatus() {
   const [status, setStatus] = useState<TaskStatusEvent | null>(latestStatus)
   useEffect(() => subscribeToTaskStatus(setStatus), [])
   return status
