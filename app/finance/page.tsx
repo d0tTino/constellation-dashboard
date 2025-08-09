@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react'
 import useSWR from 'swr'
 import { fetcher } from '../../lib/swr'
 import { BudgetOption, rankBudgetOptions } from '../../lib/finance'
-import { useFinanceUpdates } from '../socket-context'
+import { useFinanceUpdates, useSocket } from '../socket-context'
 
 export default function FinancePage() {
   const [budget, setBudget] = useState(1000)
@@ -15,6 +15,7 @@ export default function FinancePage() {
   )
 
   const update = useFinanceUpdates()
+  const socket = useSocket()
   const [paymentSchedules, setPaymentSchedules] = useState<Record<string, any[]>>({})
   const [aiExplanations, setAiExplanations] = useState<Record<string, string>>({})
   useEffect(() => {
@@ -95,7 +96,21 @@ export default function FinancePage() {
               <p>Cost of deviation: ${option.costOfDeviation}</p>
               <button
                 className="mt-2 text-blue-500 underline"
-                onClick={() => setSelected(option)}
+                onClick={() => {
+                  setSelected(option)
+                  socket?.send(
+                    JSON.stringify({
+                      type: 'finance.decision.request',
+                      category: option.category,
+                    }),
+                  )
+                  socket?.send(
+                    JSON.stringify({
+                      type: 'finance.explain.request',
+                      category: option.category,
+                    }),
+                  )
+                }}
               >
                 View Details
               </button>

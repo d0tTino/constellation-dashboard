@@ -4,11 +4,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { act } from 'react-dom/test-utils';
 
 let swrMock: any;
+let send: any;
 vi.mock('swr', () => ({ __esModule: true, default: (...args: any[]) => swrMock(...args) }));
 vi.mock('../app/socket-context', () => ({
   __esModule: true,
   useFinanceUpdates: () => null,
   useTaskStatus: () => null,
+  useSocket: () => ({ send }),
 }));
 
 import FinancePage from '../app/finance/page';
@@ -26,6 +28,7 @@ function render(ui: React.ReactElement) {
 describe('FinancePage', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
+    send = vi.fn();
   });
 
   it('labels options, highlights best choice, and shows modal content', () => {
@@ -46,6 +49,12 @@ describe('FinancePage', () => {
     expect(cards[1].className).not.toContain('border-green-500');
     const viewBtn = cards[0].querySelector('button') as HTMLButtonElement;
     act(() => { viewBtn.click(); });
+    expect(send).toHaveBeenCalledWith(
+      JSON.stringify({ type: 'finance.decision.request', category: 'Rent' }),
+    );
+    expect(send).toHaveBeenCalledWith(
+      JSON.stringify({ type: 'finance.explain.request', category: 'Rent' }),
+    );
     expect(document.body.textContent).toContain('Payment schedule coming soon.');
     expect(document.body.textContent).toContain('AI explanation coming soon.');
   });
