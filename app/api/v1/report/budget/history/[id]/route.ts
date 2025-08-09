@@ -35,14 +35,14 @@ export async function GET(
   if (!session) {
     return new Response('Unauthorized', { status: 401 })
   }
+  const cookie = req.headers.get('cookie') || ''
+  const match = cookie.match(/(?:^|; )context=([^;]+)/)
+  const requested = match ? decodeURIComponent(match[1]) : 'personal'
   const ctx = getRequestContext(req)
   if (ctx === 'group') {
-    const cookie = req.headers.get('cookie') || ''
-    const match = cookie.match(/(?:^|; )context=([^;]+)/)
-    const requested = match ? decodeURIComponent(match[1]) : ''
     const groups = session.user?.groups ?? []
     if (!groups.includes(requested)) {
-      return new Response('Forbidden', { status: 403 })
+      return Response.json({ error: 'Forbidden' }, { status: 403 })
     }
   }
   const actions = ctx === 'group' ? group[params.id] : personal[params.id]

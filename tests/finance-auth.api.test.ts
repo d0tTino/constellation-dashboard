@@ -35,7 +35,7 @@ describe('finance report auth', () => {
     vi.mocked(getServerSession).mockResolvedValue({ user: { id: '1', groups: [] } })
     const mod: any = await import(path)
     const res = await mod.GET(
-      new Request('http://test', { headers: { cookie: 'context=group' } }),
+      new Request('http://test', { headers: { cookie: 'context=team-a' } }),
       params,
     )
     expect(res.status).toBe(403)
