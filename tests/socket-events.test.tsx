@@ -27,14 +27,16 @@ function render(ui: React.ReactElement) {
 
 describe('socket event propagation', () => {
   let onmessage: ((ev: any) => void) | null;
+  let wsInstance: any;
   const originalEnv = process.env.NEXT_PUBLIC_WS_URL;
 
   beforeEach(() => {
     document.body.innerHTML = '';
     onmessage = null;
     delete process.env.NEXT_PUBLIC_WS_URL;
-    const wsInstance: any = {
+    wsInstance = {
       close: vi.fn(),
+      send: vi.fn(),
       set onmessage(fn) {
         onmessage = fn;
       },
@@ -88,5 +90,48 @@ describe('socket event propagation', () => {
     });
     await act(async () => {});
     expect(mutate).toHaveBeenCalledTimes(2);
+  });
+
+  it('updates modal with finance results', async () => {
+    const mutate = vi.fn();
+    swrMock = vi.fn(() => ({ data: [{ category: 'Rent', amount: 1000, costOfDeviation: 0 }], mutate }));
+    const { container } = render(
+      <SocketProvider>
+        <FinancePage />
+      </SocketProvider>,
+    );
+    await act(async () => {});
+    const viewBtn = container.querySelector('.border.p-4.rounded.shadow button') as HTMLButtonElement;
+    act(() => {
+      viewBtn.click();
+    });
+    expect(wsInstance.send).toHaveBeenCalledWith(
+      JSON.stringify({ type: 'finance.decision.request', category: 'Rent' }),
+    );
+    expect(wsInstance.send).toHaveBeenCalledWith(
+      JSON.stringify({ type: 'finance.explain.request', category: 'Rent' }),
+    );
+    expect(document.body.textContent).toContain('Payment schedule coming soon.');
+    expect(document.body.textContent).toContain('AI explanation coming soon.');
+    await act(async () => {
+      onmessage?.({
+        data: JSON.stringify({
+          type: 'finance.decision.result',
+          category: 'Rent',
+          paymentSchedule: ['due now'],
+        }),
+      });
+    });
+    await act(async () => {
+      onmessage?.({
+        data: JSON.stringify({
+          type: 'finance.explain.result',
+          category: 'Rent',
+          explanation: 'Because reasons',
+        }),
+      });
+    });
+    expect(document.body.textContent).toContain('due now');
+    expect(document.body.textContent).toContain('Because reasons');
   });
 });
