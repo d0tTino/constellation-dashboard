@@ -68,6 +68,9 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
             case 'calendar.event.created':
               setCalendarEvent(data);
               break;
+            case 'calendar.event.updated':
+              setCalendarEvent(data);
+              break;
             case 'finance.decision.result':
             case 'finance.explain.result':
               setFinanceUpdate(data);

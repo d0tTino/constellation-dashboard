@@ -71,6 +71,21 @@ describe('socket event propagation', () => {
     expect(mutate).toHaveBeenCalled();
   });
 
+  it('refreshes calendar when an event is updated', async () => {
+    const mutate = vi.fn();
+    swrMock = vi.fn();
+    render(
+      <SocketProvider>
+        <ScheduleCalendar events={[]} layers={[]} visibleLayers={[]} mutate={mutate} />
+      </SocketProvider>
+    );
+    await act(async () => {});
+    await act(async () => {
+      onmessage?.({ data: JSON.stringify({ type: 'calendar.event.updated' }) });
+    });
+    expect(mutate).toHaveBeenCalled();
+  });
+
   it('refreshes finance data on updates', async () => {
     const mutate = vi.fn();
     swrMock = vi.fn(() => ({ data: [{ category: 'Rent', amount: 1000, costOfDeviation: 0 }], mutate }));
