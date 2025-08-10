@@ -8,7 +8,7 @@ import { useFinanceUpdates, useSocket } from '../socket-context'
 export default function FinancePage() {
   const [budget, setBudget] = useState(1000)
   const [payoffTime, setPayoffTime] = useState(12)
-  const { data, mutate } = useSWR<BudgetOption[]>(
+  const { data, error, mutate } = useSWR<BudgetOption[]>(
     `/api/v1/report/budget?budget=${budget}&payoffTime=${payoffTime}`,
     fetcher,
     { refreshInterval: 30000 },
@@ -78,6 +78,11 @@ export default function FinancePage() {
           Analyze
         </button>
       </div>
+      {error && (
+        <p role="alert" className="mb-4 text-red-500">
+          Failed to load budget options.
+        </p>
+      )}
       <div className="grid gap-4 md:grid-cols-2">
         {ranked.map((option, idx) => {
           const label = String.fromCharCode(65 + idx)

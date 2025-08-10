@@ -100,5 +100,12 @@ describe('FinancePage', () => {
     act(() => { analyzeBtn.click(); });
     expect(mutate).toHaveBeenCalled();
   });
+
+  it('displays an error message when the fetch fails', () => {
+    const mutate = vi.fn();
+    swrMock = vi.fn(() => ({ error: new Error('Bad request'), mutate }));
+    const { container } = render(<FinancePage />);
+    expect(container.textContent).toContain('Failed to load budget options.');
+  });
 });
 
