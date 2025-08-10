@@ -7,6 +7,7 @@ import timeGridPlugin from '@fullcalendar/timegrid'
 import interactionPlugin, { EventDropArg, DateClickArg } from '@fullcalendar/interaction'
 import { EventContentArg, EventMountArg } from '@fullcalendar/core'
 import { useCalendarEvents, useTaskStatus } from '../socket-context'
+import SharedEventTooltip from './SharedEventTooltip'
 
 interface Layer {
   id: string
@@ -59,8 +60,6 @@ export default function ScheduleCalendar({ events, layers, visibleLayers, mutate
 
   const handleEventMount = (info: EventMountArg) => {
     const shared = info.event.extendedProps.shared
-    const invitees: string[] = info.event.extendedProps.invitees || []
-    const permissions: string[] = info.event.extendedProps.permissions || []
     if (info.view.type === 'dayGridMonth') {
       info.el.style.display = 'none'
       return
@@ -72,9 +71,6 @@ export default function ScheduleCalendar({ events, layers, visibleLayers, mutate
       icon.className = 'mr-1'
       info.el.prepend(icon)
     }
-    if (invitees.length || permissions.length) {
-      info.el.title = `Invitees: ${invitees.join(', ')}\nPermissions: ${permissions.join(', ')}`
-    }
     const color = info.event.backgroundColor || info.event.extendedProps.backgroundColor
     if (color) {
       info.el.style.backgroundColor = color
@@ -85,12 +81,22 @@ export default function ScheduleCalendar({ events, layers, visibleLayers, mutate
   const renderEventContent = (arg: EventContentArg) => {
     if (arg.view.type === 'dayGridMonth') return null
     const shared = arg.event.extendedProps.shared
-    return (
+    const invitees: string[] = arg.event.extendedProps.invitees || []
+    const permissions: string[] = arg.event.extendedProps.permissions || []
+    const content = (
       <div className="flex items-center">
         {shared && <span className="mr-1">👥</span>}
         <span>{arg.event.title}</span>
       </div>
     )
+    if (invitees.length || permissions.length) {
+      return (
+        <SharedEventTooltip invitees={invitees} permissions={permissions}>
+          {content}
+        </SharedEventTooltip>
+      )
+    }
+    return content
   }
 
   const renderDayCell = (arg: DayCellContentArg) => {
