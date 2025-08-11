@@ -1,5 +1,6 @@
 import NextAuth, { type NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
+import GitHubProvider from 'next-auth/providers/github'
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -18,6 +19,10 @@ export const authOptions: NextAuthOptions = {
         return null
       },
     }),
+    GitHubProvider({
+      clientId: process.env.GITHUB_ID!,
+      clientSecret: process.env.GITHUB_SECRET!,
+    }),
   ],
   session: {
     strategy: 'jwt',
@@ -26,6 +31,9 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (session.user && token.sub) {
         session.user.id = token.sub as string
+      }
+      if (token.accessToken) {
+        ;(session as any).accessToken = token.accessToken as string
       }
       return session
     },
