@@ -23,6 +23,7 @@ interface Event {
   shared?: boolean
   invitees?: string[]
   permissions?: string[]
+  owner?: string
 }
 
 interface CalendarData {
@@ -75,7 +76,7 @@ export default function CalendarPage() {
     const res = await fetch('/api/schedule', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, title, start, end, layer, shared })
+      body: JSON.stringify({ id, title, start, end, layer, shared, owner: session?.user?.id })
     })
     if (!res.ok) {
       let message = 'Failed to create event'
