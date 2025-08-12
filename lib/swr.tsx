@@ -2,7 +2,13 @@
 import React from 'react'
 import { SWRConfig } from 'swr'
 
-export const fetcher = (url: string) => fetch(url).then(res => res.json())
+export const fetcher = (url: string) =>
+  fetch(url).then(res => {
+    if (!res.ok) {
+      throw new Error(`${res.status} ${res.statusText}`)
+    }
+    return res.json()
+  })
 
 function localStorageProvider() {
   if (typeof window === 'undefined') return new Map()

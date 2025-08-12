@@ -56,4 +56,29 @@ describe('SWR local cache', () => {
     expect(container2.textContent).toBe('server')
     expect(fetchSpy2).toHaveBeenCalledTimes(0)
   })
+
+  it('bubbles non-OK responses as errors', async () => {
+    const key = '/api/error'
+    const fetchMock = vi.fn(() =>
+      Promise.resolve(
+        new Response('fail', { status: 500, statusText: 'Internal Server Error' })
+      )
+    )
+    vi.spyOn(globalThis, 'fetch').mockImplementation(fetchMock as any)
+
+    function Comp() {
+      const { error } = useSWR(key)
+      return <div>{error ? error.message : ''}</div>
+    }
+
+    const { container } = render(
+      <SWRProvider>
+        <Comp />
+      </SWRProvider>
+    )
+
+    await act(async () => {})
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(container.textContent).toContain('Internal Server Error')
+  })
 })
