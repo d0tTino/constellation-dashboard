@@ -197,6 +197,7 @@ describe('CalendarPage', () => {
     const body = JSON.parse(fetchMock.mock.calls[0][1].body);
     expect(body.id).toBe('uuid-1');
     expect(body.shared).toBe(true);
+    expect(body.owner).toBe('user1');
   });
 
   it('renders shared events with distinctive styling', () => {
@@ -218,5 +219,25 @@ describe('CalendarPage', () => {
 
     expect(el.classList.contains('border-dashed')).toBe(true);
     expect(el.firstChild?.textContent).toBe('👥');
+  });
+
+  it('renders owner initials on events', () => {
+    const mutate = vi.fn();
+    swrMock = vi.fn(() => ({
+      data: { events: [{ id: '1', title: 't', start: '2023-01-01', owner: 'user1' }], layers: [] }, mutate },
+    ));
+
+    render(<CalendarPage />);
+
+    const arg = {
+      event: { title: 't', extendedProps: { owner: 'user1' } },
+      view: { type: 'timeGridWeek' },
+    } as any;
+    const result = calendarProps.eventContent(arg);
+    const container = document.createElement('div');
+    act(() => {
+      ReactDOM.createRoot(container).render(result as any);
+    });
+    expect(container.textContent).toContain('US');
   });
 });

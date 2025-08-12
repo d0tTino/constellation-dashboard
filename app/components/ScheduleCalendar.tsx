@@ -24,6 +24,7 @@ interface Event {
   shared?: boolean
   invitees?: string[]
   permissions?: string[]
+  owner?: string
 }
 
 interface ScheduleCalendarProps {
@@ -83,9 +84,12 @@ export default function ScheduleCalendar({ events, layers, visibleLayers, mutate
     const shared = arg.event.extendedProps.shared
     const invitees: string[] = arg.event.extendedProps.invitees || []
     const permissions: string[] = arg.event.extendedProps.permissions || []
+    const owner: string | undefined = arg.event.extendedProps.owner
+    const initials = owner?.slice(0, 2).toUpperCase()
     const content = (
       <div className="flex items-center">
         {shared && <span className="mr-1">👥</span>}
+        {initials && <span className="mr-1">{initials}</span>}
         <span>{arg.event.title}</span>
       </div>
     )
@@ -114,6 +118,7 @@ export default function ScheduleCalendar({ events, layers, visibleLayers, mutate
                   style={{ backgroundColor: e.backgroundColor, border: e.shared ? '1px solid black' : 'none' }}
                 />
                 {e.shared && <span className="mr-1">👥</span>}
+                {e.owner && <span className="mr-1">{e.owner.slice(0, 2).toUpperCase()}</span>}
                 {e.title || '(no title)'}
               </li>
             ))}

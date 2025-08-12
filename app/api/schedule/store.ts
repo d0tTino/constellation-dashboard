@@ -16,6 +16,7 @@ export interface CalendarEvent {
   shared?: boolean
   invitees?: string[]
   permissions?: string[]
+  owner?: string
 }
 
 interface CalendarData {
@@ -68,7 +69,7 @@ export async function getEvent(id: string): Promise<CalendarEvent | undefined> {
 
 export function validateEvent(data: any): CalendarEvent {
   if (!data || typeof data !== 'object') throw new Error('Invalid payload')
-  const { id, title, start, end, layer, shared, invitees, permissions } = data
+  const { id, title, start, end, layer, shared, invitees, permissions, owner } = data
   if (typeof id !== 'string' || typeof start !== 'string') {
     throw new Error('id and start are required')
   }
@@ -90,7 +91,10 @@ export function validateEvent(data: any): CalendarEvent {
   if (permissions !== undefined && !Array.isArray(permissions)) {
     throw new Error('permissions must be array')
   }
-  return { id, title, start, end, layer, shared, invitees, permissions }
+  if (owner !== undefined && typeof owner !== 'string') {
+    throw new Error('owner must be string')
+  }
+  return { id, title, start, end, layer, shared, invitees, permissions, owner }
 }
 
 export function validateEventPatch(data: any): Partial<CalendarEvent> {
@@ -123,6 +127,10 @@ export function validateEventPatch(data: any): Partial<CalendarEvent> {
   if (data.permissions !== undefined) {
     if (!Array.isArray(data.permissions)) throw new Error('permissions must be array')
     result.permissions = data.permissions
+  }
+  if (data.owner !== undefined) {
+    if (typeof data.owner !== 'string') throw new Error('owner must be string')
+    result.owner = data.owner
   }
   if (data.id !== undefined) {
     throw new Error('id cannot be updated')
