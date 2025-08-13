@@ -14,6 +14,7 @@ export interface CalendarEvent {
   end?: string
   layer?: string
   shared?: boolean
+  groupId?: string
   invitees?: string[]
   permissions?: string[]
   owner?: string
@@ -90,10 +91,10 @@ export function validateEvent(data: any): CalendarEvent {
     end,
     layer,
     shared,
+    groupId,
     invitees,
     permissions,
     owner,
-    groupId,
 
   } = data
   if (typeof id !== 'string' || typeof start !== 'string') {
@@ -111,6 +112,9 @@ export function validateEvent(data: any): CalendarEvent {
   if (shared !== undefined && typeof shared !== 'boolean') {
     throw new Error('shared must be boolean')
   }
+  if (groupId !== undefined && typeof groupId !== 'string') {
+    throw new Error('groupId must be string')
+  }
   if (invitees !== undefined && !Array.isArray(invitees)) {
     throw new Error('invitees must be array')
   }
@@ -120,9 +124,7 @@ export function validateEvent(data: any): CalendarEvent {
   if (owner !== undefined && typeof owner !== 'string') {
     throw new Error('owner must be string')
   }
-  if (groupId !== undefined && typeof groupId !== 'string') {
-    throw new Error('groupId must be string')
-  }
+
   return {
     id,
     title,
@@ -130,10 +132,10 @@ export function validateEvent(data: any): CalendarEvent {
     end,
     layer,
     shared,
+    groupId,
     invitees,
     permissions,
     owner,
-    groupId,
 
   }
 }
