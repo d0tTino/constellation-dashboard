@@ -14,7 +14,6 @@ export interface CalendarEvent {
   end?: string
   layer?: string
   shared?: boolean
-  groupId?: string
   invitees?: string[]
   permissions?: string[]
   owner?: string
@@ -45,7 +44,7 @@ async function read(): Promise<CalendarData> {
         invitees: e.invitees,
         permissions: e.permissions,
         owner: e.owner,
-        groupId: e.groupId
+        groupId: e.groupId,
       })),
       layers: data.layers || []
     }
@@ -60,17 +59,35 @@ async function read(): Promise<CalendarData> {
 }
 
 async function write(data: CalendarData): Promise<void> {
-  await fs.writeFile(dataFile, JSON.stringify(data, null, 2), 'utf8')
+  const out: CalendarData = {
+    events: data.events.map(e => ({
+      id: e.id,
+      title: e.title,
+      start: e.start,
+      end: e.end,
+      layer: e.layer,
+      shared: e.shared,
+      invitees: e.invitees,
+      permissions: e.permissions,
+      owner: e.owner,
+      groupId: e.groupId,
+    })),
+    layers: data.layers,
+  }
+  await fs.writeFile(dataFile, JSON.stringify(out, null, 2), 'utf8')
 }
 
 export async function getData(): Promise<CalendarData> {
   const data = await read()
-  return { events: data.events, layers: data.layers }
+  return {
+    events: data.events.map(e => ({ ...e, groupId: e.groupId })),
+    layers: data.layers,
+  }
 }
 
 export async function getEvents(): Promise<CalendarEvent[]> {
-  const data = await getData()
-  return data.events
+  const data = await read()
+  return data.events.map(e => ({ ...e, groupId: e.groupId }))
 }
 
 export async function getLayers(): Promise<CalendarLayer[]> {
