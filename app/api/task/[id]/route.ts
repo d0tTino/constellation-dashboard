@@ -67,7 +67,10 @@ export async function PATCH(
     const patch = validateEventPatch(body)
     await updateEvent(params.id, patch)
     const updated = { ...existing, ...patch }
-    sendWsMessage({ type: 'calendar.event.updated', event: updated })
+    sendWsMessage(
+      { type: 'calendar.event.updated', event: updated },
+      (session as any).accessToken,
+    )
     return Response.json({ success: true })
   } catch (e: any) {
     return Response.json({ error: e.message }, { status: 400 })

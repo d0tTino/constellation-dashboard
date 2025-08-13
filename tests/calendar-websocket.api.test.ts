@@ -39,7 +39,10 @@ describe('calendar websocket notifications', () => {
     process.env.SCHEDULE_DATA_FILE = file
     await fs.writeFile(file, JSON.stringify({ events: [], layers: [] }))
 
-    vi.mocked(getServerSession).mockResolvedValue({ user: { id: '1' } })
+    vi.mocked(getServerSession).mockResolvedValue({
+      user: { id: '1' },
+      accessToken: 'token123',
+    })
 
     const send = vi.fn()
     const wsInstance: any = { send, readyState: 1, OPEN: 1 }
@@ -63,6 +66,7 @@ describe('calendar websocket notifications', () => {
       type: 'calendar.event.created',
       event,
     })
+    expect(wsMock).toHaveBeenCalledWith('ws://test?token=token123')
 
     const patchReq = new Request('http://test', {
       method: 'PATCH',
