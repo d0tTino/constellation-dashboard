@@ -68,7 +68,7 @@ export async function POST(req: Request) {
     const event =
       ctx === 'group' ? { ...baseEvent, groupId: groupId! } : baseEvent
     await addEvent(event)
-    sendWsMessage({ type: 'calendar.event.created', event })
+    sendWsMessage({ type: 'calendar.event.created', event }, (session as any).accessToken)
     return Response.json({ success: true })
   } catch (e: any) {
     return Response.json({ error: e.message }, { status: 400 })
