@@ -16,14 +16,24 @@ export async function GET(
   if (!event) {
     return new Response('Not found', { status: 404 })
   }
+  const cookie = req.headers.get('cookie') || ''
+  const match = cookie.match(/(?:^|; )context=([^;]+)/)
+  const requested = match ? decodeURIComponent(match[1]) : 'personal'
   const ctx = getRequestContext(req)
+  const groupId = (event as any).groupId
   if (ctx === 'personal' && event.shared) {
     return new Response('Forbidden', { status: 403 })
   }
-  if (ctx === 'group' && !event.shared) {
-    return new Response('Forbidden', { status: 403 })
+  if (ctx === 'group') {
+    if (!event.shared) {
+      return new Response('Forbidden', { status: 403 })
+    }
+    const groups = session.user?.groups ?? []
+    if (!groupId || groupId !== requested || !groups.includes(groupId)) {
+      return new Response('Forbidden', { status: 403 })
+    }
   }
-  return Response.json(event)
+  return Response.json({ ...event, groupId: groupId ?? null })
 }
 
 export async function PATCH(
@@ -34,16 +44,26 @@ export async function PATCH(
   if (!session) {
     return new Response('Unauthorized', { status: 401 })
   }
+  const cookie = req.headers.get('cookie') || ''
+  const match = cookie.match(/(?:^|; )context=([^;]+)/)
+  const requested = match ? decodeURIComponent(match[1]) : 'personal'
   const ctx = getRequestContext(req)
   const existing = await getEvent(params.id)
   if (!existing) {
     return new Response('Not found', { status: 404 })
   }
+  const groupId = (existing as any).groupId
   if (ctx === 'personal' && existing.shared) {
     return new Response('Forbidden', { status: 403 })
   }
-  if (ctx === 'group' && !existing.shared) {
-    return new Response('Forbidden', { status: 403 })
+  if (ctx === 'group') {
+    if (!existing.shared) {
+      return new Response('Forbidden', { status: 403 })
+    }
+    const groups = session.user?.groups ?? []
+    if (!groupId || groupId !== requested || !groups.includes(groupId)) {
+      return new Response('Forbidden', { status: 403 })
+    }
   }
   let body: unknown
   try {
