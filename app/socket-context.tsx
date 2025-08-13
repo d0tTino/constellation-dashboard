@@ -1,5 +1,6 @@
 'use client';
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { signIn, useSession } from 'next-auth/react';
 import {
   TaskStatusEvent,
   useTaskStatus as useTaskStatusSubscription,
@@ -40,16 +41,19 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
   const [calendarEvent, setCalendarEvent] = useState<any>(null);
   const [financeUpdate, setFinanceUpdate] = useState<any>(null);
   const taskStatus = useTaskStatusSubscription();
+  const { data: session } = useSession();
+  const accessToken = (session as any)?.accessToken as string | undefined;
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const url = process.env.NEXT_PUBLIC_WS_URL ?? 'ws://localhost:3001';
+    if (typeof window === 'undefined' || !accessToken) return;
+    const baseUrl = process.env.NEXT_PUBLIC_WS_URL ?? 'ws://localhost:3001';
 
     let ws: WebSocket;
     let reconnectAttempts = 0;
     let timeout: ReturnType<typeof setTimeout> | undefined;
 
     const connect = () => {
+      const url = `${baseUrl}?token=${encodeURIComponent(accessToken)}`;
       ws = new WebSocket(url);
       setSocket(ws);
 
@@ -85,6 +89,10 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
 
       ws.onclose = (event) => {
         console.error('WebSocket closed:', event);
+        if ([401, 4001, 4401].includes(event.code)) {
+          signIn();
+          return;
+        }
         const delay = Math.min(10000, 1000 * 2 ** reconnectAttempts);
         reconnectAttempts += 1;
         timeout = setTimeout(connect, delay);
@@ -97,7 +105,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       if (timeout) clearTimeout(timeout);
       ws.close();
     };
-  }, []);
+  }, [accessToken]);
 
   return (
     <SocketContext.Provider value={{ socket, calendarEvent, financeUpdate, taskStatus }}>
