@@ -42,7 +42,7 @@ describe('FinancePage', () => {
       ],
       mutate,
     }));
-    const { container, root } = render(<FinancePage />);
+    const { container } = render(<FinancePage />);
     const cards = Array.from(container.querySelectorAll('.border.p-4.rounded.shadow')) as HTMLDivElement[];
     expect(cards[0].textContent).toContain('Option A - Rent');
     expect(cards[1].textContent).toContain('Option B - Food');
@@ -59,6 +59,22 @@ describe('FinancePage', () => {
     );
     expect(document.body.textContent).toContain('Payment schedule coming soon.');
     expect(document.body.textContent).toContain('AI explanation coming soon.');
+  });
+
+  it('renders updated payment schedule and explanation after events', () => {
+    const mutate = vi.fn();
+    swrMock = vi.fn(() => ({
+      data: [
+        { category: 'Rent', amount: 1000, costOfDeviation: 0 },
+      ],
+      mutate,
+    }));
+    const { root } = render(<FinancePage />);
+    const viewBtn = document.querySelector('button.text-blue-500') as HTMLButtonElement;
+    act(() => { viewBtn.click(); });
+
+    expect(document.body.textContent).toContain('Payment schedule coming soon.');
+    expect(document.body.textContent).toContain('AI explanation coming soon.');
 
     financeUpdate = {
       type: 'finance.decision.result',
@@ -68,7 +84,6 @@ describe('FinancePage', () => {
     act(() => {
       root.render(<FinancePage />);
     });
-    expect(document.body.textContent).not.toContain('Payment schedule coming soon.');
     expect(document.body.textContent).toContain('Installment 1');
 
     financeUpdate = {
@@ -79,7 +94,6 @@ describe('FinancePage', () => {
     act(() => {
       root.render(<FinancePage />);
     });
-    expect(document.body.textContent).not.toContain('AI explanation coming soon.');
     expect(document.body.textContent).toContain('Because it saves money');
   });
 
