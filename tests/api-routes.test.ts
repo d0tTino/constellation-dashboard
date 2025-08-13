@@ -116,13 +116,15 @@ describe('schedule API routes', () => {
       JSON.stringify({
         events: [
           { id: '1', start: '2024-01-01', shared: false },
-          { id: '2', start: '2024-01-02', shared: true },
+          { id: '2', start: '2024-01-02', shared: true, groupId: 'team-a' },
         ],
         layers: [],
       }),
     )
 
-    vi.mocked(getServerSession).mockResolvedValue({ user: { id: '1' } })
+    vi.mocked(getServerSession).mockResolvedValue({
+      user: { id: '1', groups: ['team-a'] },
+    })
     const {
       schedule: { GET, POST },
     } = await loadScheduleModules()
@@ -134,7 +136,9 @@ describe('schedule API routes', () => {
     expect(dataPersonal.events).toHaveLength(1)
 
     const resGroup = await GET(
-      new Request('http://test', { headers: { cookie: 'context=group' } }),
+      new Request('http://test', {
+        headers: { cookie: 'context=group; groupId=team-a' },
+      }),
     )
     const dataGroup = await resGroup.json()
     expect(dataGroup.events).toHaveLength(1)
@@ -146,6 +150,25 @@ describe('schedule API routes', () => {
     })
     const badRes = await POST(badReq)
     expect(badRes.status).toBe(403)
+
+    const missingGroupReq = new Request('http://test', {
+      method: 'POST',
+      body: JSON.stringify({ id: '4', start: '2024-04-01', shared: true }),
+      headers: { 'Content-Type': 'application/json', cookie: 'context=group' },
+    })
+    const missingGroupRes = await POST(missingGroupReq)
+    expect(missingGroupRes.status).toBe(400)
+
+    const unauthorizedReq = new Request('http://test', {
+      method: 'POST',
+      body: JSON.stringify({ id: '5', start: '2024-05-01', shared: true }),
+      headers: {
+        'Content-Type': 'application/json',
+        cookie: 'context=group; groupId=team-b',
+      },
+    })
+    const unauthorizedRes = await POST(unauthorizedReq)
+    expect(unauthorizedRes.status).toBe(403)
   })
 })
 
