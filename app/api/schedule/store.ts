@@ -93,7 +93,8 @@ export function validateEvent(data: any): CalendarEvent {
     invitees,
     permissions,
     owner,
-    groupId
+    groupId,
+
   } = data
   if (typeof id !== 'string' || typeof start !== 'string') {
     throw new Error('id and start are required')
@@ -132,7 +133,8 @@ export function validateEvent(data: any): CalendarEvent {
     invitees,
     permissions,
     owner,
-    groupId
+    groupId,
+
   }
 }
 
@@ -172,8 +174,8 @@ export function validateEventPatch(data: any): Partial<CalendarEvent> {
     result.owner = data.owner
   }
   if (data.groupId !== undefined) {
-    if (typeof data.groupId !== 'string') throw new Error('groupId must be string')
-    result.groupId = data.groupId
+    throw new Error('groupId cannot be updated')
+
   }
   if (data.id !== undefined) {
     throw new Error('id cannot be updated')
