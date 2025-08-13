@@ -16,22 +16,18 @@ export async function GET(
   if (!event) {
     return new Response('Not found', { status: 404 })
   }
-  const cookie = req.headers.get('cookie') || ''
-  const match = cookie.match(/(?:^|; )context=([^;]+)/)
-  const requested = match ? decodeURIComponent(match[1]) : 'personal'
   const ctx = getRequestContext(req)
   const groupId = (event as any).groupId
-  if (ctx === 'personal' && event.shared) {
-    return new Response('Forbidden', { status: 403 })
-  }
   if (ctx === 'group') {
-    if (!event.shared) {
-      return new Response('Forbidden', { status: 403 })
-    }
+    const cookie = req.headers.get('cookie') || ''
+    const match = cookie.match(/(?:^|; )context=([^;]+)/)
+    const requested = match ? decodeURIComponent(match[1]) : ''
     const groups = session.user?.groups ?? []
-    if (!groupId || groupId !== requested || !groups.includes(groupId)) {
+    if (!event.shared || !groupId || groupId !== requested || !groups.includes(groupId)) {
       return new Response('Forbidden', { status: 403 })
     }
+  } else if (event.shared) {
+    return new Response('Forbidden', { status: 403 })
   }
   return Response.json({ ...event, groupId: groupId ?? null })
 }
@@ -44,26 +40,22 @@ export async function PATCH(
   if (!session) {
     return new Response('Unauthorized', { status: 401 })
   }
-  const cookie = req.headers.get('cookie') || ''
-  const match = cookie.match(/(?:^|; )context=([^;]+)/)
-  const requested = match ? decodeURIComponent(match[1]) : 'personal'
-  const ctx = getRequestContext(req)
   const existing = await getEvent(params.id)
   if (!existing) {
     return new Response('Not found', { status: 404 })
   }
+  const ctx = getRequestContext(req)
   const groupId = (existing as any).groupId
-  if (ctx === 'personal' && existing.shared) {
-    return new Response('Forbidden', { status: 403 })
-  }
   if (ctx === 'group') {
-    if (!existing.shared) {
-      return new Response('Forbidden', { status: 403 })
-    }
+    const cookie = req.headers.get('cookie') || ''
+    const match = cookie.match(/(?:^|; )context=([^;]+)/)
+    const requested = match ? decodeURIComponent(match[1]) : ''
     const groups = session.user?.groups ?? []
-    if (!groupId || groupId !== requested || !groups.includes(groupId)) {
+    if (!existing.shared || !groupId || groupId !== requested || !groups.includes(groupId)) {
       return new Response('Forbidden', { status: 403 })
     }
+  } else if (existing.shared) {
+    return new Response('Forbidden', { status: 403 })
   }
   let body: unknown
   try {
