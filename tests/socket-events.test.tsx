@@ -3,6 +3,11 @@ import ReactDOM from 'react-dom/client';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { act } from 'react-dom/test-utils';
 
+vi.mock('next-auth/react', () => ({
+  useSession: () => ({ data: { accessToken: 'test-token' } }),
+  signIn: vi.fn(),
+}));
+
 import { SocketProvider } from '../app/socket-context';
 import ScheduleCalendar from '../app/components/ScheduleCalendar';
 import FinancePage from '../app/finance/page';

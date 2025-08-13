@@ -1,8 +1,14 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { SocketProvider, useSocket, useCalendarEvents, useFinanceUpdates } from '../app/socket-context';
 import { act } from 'react-dom/test-utils';
+
+vi.mock('next-auth/react', () => ({
+  useSession: () => ({ data: { accessToken: 'test-token' } }),
+  signIn: vi.fn(),
+}));
+
+import { SocketProvider, useSocket, useCalendarEvents, useFinanceUpdates } from '../app/socket-context';
 
 function render(ui: React.ReactElement) {
   const container = document.createElement('div');
@@ -50,7 +56,7 @@ describe('SocketProvider', () => {
 
     await act(async () => {});
 
-    expect(wsMock).toHaveBeenCalledWith('ws://localhost:3001');
+    expect(wsMock).toHaveBeenCalledWith('ws://localhost:3001?token=test-token');
     expect(socket).toBe(wsInstance);
   });
 
