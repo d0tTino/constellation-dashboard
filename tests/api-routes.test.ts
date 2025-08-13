@@ -170,6 +170,64 @@ describe('schedule API routes', () => {
     const unauthorizedRes = await POST(unauthorizedReq)
     expect(unauthorizedRes.status).toBe(403)
   })
+
+  it('enforces group membership on task routes', async () => {
+    process.env.SCHEDULE_DATA_FILE = file
+    await fs.writeFile(file, JSON.stringify({ events: [], layers: [] }))
+
+    const {
+      schedule: { POST },
+      task: { GET, PATCH },
+    } = await loadScheduleModules()
+
+    const event = {
+      id: 'g1',
+      start: '2024-07-01',
+      shared: true,
+      groupId: 'team-a',
+    }
+
+    vi.mocked(getServerSession).mockResolvedValue({
+      user: { id: '1', groups: ['team-a'] },
+    })
+    const postReq = new Request('http://test', {
+      method: 'POST',
+      body: JSON.stringify(event),
+      headers: { 'Content-Type': 'application/json', cookie: 'context=team-a' },
+    })
+    await POST(postReq)
+
+    vi.mocked(getServerSession).mockResolvedValue({
+      user: { id: '1', groups: ['team-a'] },
+    })
+    const getRes = await GET(
+      new Request('http://test', { headers: { cookie: 'context=team-a' } }),
+      { params: { id: event.id } },
+    )
+    expect(getRes.status).toBe(200)
+    const data = await getRes.json()
+    expect(data.groupId).toBe('team-a')
+
+    vi.mocked(getServerSession).mockResolvedValue({
+      user: { id: '1', groups: ['team-a'] },
+    })
+    const badGet = await GET(
+      new Request('http://test', { headers: { cookie: 'context=team-b' } }),
+      { params: { id: event.id } },
+    )
+    expect(badGet.status).toBe(403)
+
+    vi.mocked(getServerSession).mockResolvedValue({
+      user: { id: '2', groups: ['team-b'] },
+    })
+    const patchReq = new Request('http://test', {
+      method: 'PATCH',
+      body: JSON.stringify({ title: 'Updated' }),
+      headers: { 'Content-Type': 'application/json', cookie: 'context=team-a' },
+    })
+    const patchRes = await PATCH(patchReq, { params: { id: event.id } })
+    expect(patchRes.status).toBe(403)
+  })
 })
 
 describe('budget report API route', () => {

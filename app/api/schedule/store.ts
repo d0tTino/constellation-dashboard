@@ -18,6 +18,7 @@ export interface CalendarEvent {
   invitees?: string[]
   permissions?: string[]
   owner?: string
+  groupId?: string
 }
 
 interface CalendarData {
@@ -34,7 +35,18 @@ async function read(): Promise<CalendarData> {
     const text = await fs.readFile(dataFile, 'utf8')
     const data = JSON.parse(text)
     return {
-      events: data.events || [],
+      events: (data.events || []).map((e: any) => ({
+        id: e.id,
+        title: e.title,
+        start: e.start,
+        end: e.end,
+        layer: e.layer,
+        shared: e.shared,
+        invitees: e.invitees,
+        permissions: e.permissions,
+        owner: e.owner,
+        groupId: e.groupId
+      })),
       layers: data.layers || []
     }
   } catch (err: any) {
@@ -52,11 +64,13 @@ async function write(data: CalendarData): Promise<void> {
 }
 
 export async function getData(): Promise<CalendarData> {
-  return read()
+  const data = await read()
+  return { events: data.events, layers: data.layers }
 }
 
 export async function getEvents(): Promise<CalendarEvent[]> {
-  return (await read()).events
+  const data = await getData()
+  return data.events
 }
 
 export async function getLayers(): Promise<CalendarLayer[]> {
@@ -81,6 +95,7 @@ export function validateEvent(data: any): CalendarEvent {
     invitees,
     permissions,
     owner,
+
   } = data
   if (typeof id !== 'string' || typeof start !== 'string') {
     throw new Error('id and start are required')
@@ -109,6 +124,7 @@ export function validateEvent(data: any): CalendarEvent {
   if (owner !== undefined && typeof owner !== 'string') {
     throw new Error('owner must be string')
   }
+
   return {
     id,
     title,
@@ -120,6 +136,7 @@ export function validateEvent(data: any): CalendarEvent {
     invitees,
     permissions,
     owner,
+
   }
 }
 
@@ -157,6 +174,10 @@ export function validateEventPatch(data: any): Partial<CalendarEvent> {
   if (data.owner !== undefined) {
     if (typeof data.owner !== 'string') throw new Error('owner must be string')
     result.owner = data.owner
+  }
+  if (data.groupId !== undefined) {
+    throw new Error('groupId cannot be updated')
+
   }
   if (data.id !== undefined) {
     throw new Error('id cannot be updated')
