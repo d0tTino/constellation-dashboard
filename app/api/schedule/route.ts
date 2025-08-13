@@ -24,8 +24,14 @@ export async function GET(req: Request) {
   }
   const ctx = getRequestContext(req)
   const groupId = getGroupId(req)
-  if (ctx === 'group' && !groupId) {
-    return new Response('groupId required', { status: 400 })
+  if (ctx === 'group') {
+    if (!groupId) {
+      return new Response('groupId required', { status: 400 })
+    }
+    const groups = session.user?.groups ?? []
+    if (!groups.includes(groupId)) {
+      return new Response('Forbidden', { status: 403 })
+    }
   }
   const data = await getData()
   const events = data.events.filter(e =>
