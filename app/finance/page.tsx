@@ -99,8 +99,11 @@ export default function FinancePage() {
                   Option {label} - {option.category}
                 </span>
                 {isBest && (
-                  <span className="ml-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded">
-                    Best
+                  <span
+                    aria-label="best option"
+                    className="ml-2 flex items-center bg-green-500 text-white text-xs px-2 py-0.5 rounded"
+                  >
+                    <span className="mr-1">⭐</span>Best
                   </span>
                 )}
               </div>
