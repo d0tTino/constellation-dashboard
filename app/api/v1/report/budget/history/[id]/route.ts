@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../../../../../auth/[...nextauth]/route'
-import { getRequestContext } from '../../../../../../../lib/context'
+import { getContextAndGroupId } from '../../../../../../../lib/context-utils'
 
 type Action = { id: string; description: string }
 
@@ -35,13 +35,10 @@ export async function GET(
   if (!session) {
     return new Response('Unauthorized', { status: 401 })
   }
-  const cookie = req.headers.get('cookie') || ''
-  const match = cookie.match(/(?:^|; )context=([^;]+)/)
-  const requested = match ? decodeURIComponent(match[1]) : 'personal'
-  const ctx = getRequestContext(req)
+  const { context: ctx, groupId } = getContextAndGroupId(req)
   if (ctx === 'group') {
     const groups = session.user?.groups ?? []
-    if (!groups.includes(requested)) {
+    if (!groupId || !groups.includes(groupId)) {
       return Response.json({ error: 'Forbidden' }, { status: 403 })
     }
   }
