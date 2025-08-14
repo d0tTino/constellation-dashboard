@@ -49,6 +49,10 @@ describe('FinancePage', () => {
     expect(cards[0].className).toContain('border-green-500');
     expect(cards[0].className).toContain('bg-green-50');
     expect(cards[1].className).not.toContain('border-green-500');
+    expect(cards[0].textContent).toContain('Best');
+    expect(cards[0].textContent).not.toContain('Cost of deviation');
+    const costInfo = cards[1].querySelector('p:nth-of-type(2)') as HTMLParagraphElement;
+    expect(costInfo.textContent).toMatch(/Cost of deviation:/);
     const viewBtn = cards[0].querySelector('button') as HTMLButtonElement;
     act(() => { viewBtn.click(); });
     expect(send).toHaveBeenCalledWith(
