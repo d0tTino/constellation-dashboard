@@ -67,10 +67,10 @@ export default function ScheduleCalendar({ events, layers, visibleLayers, mutate
     }, {})
   }, [filtered])
 
-  const getColorClass = (count: number) => {
-    if (count === 0) return ''
-    const classes = ['bg-blue-100', 'bg-blue-200', 'bg-blue-300', 'bg-blue-400', 'bg-blue-500']
-    return classes[Math.min(count, classes.length) - 1]
+  const getColorStyle = (count: number): React.CSSProperties => {
+    if (count === 0) return {}
+    const intensity = Math.min(count, 5) / 5
+    return { backgroundColor: `rgba(59, 130, 246, ${intensity})` }
   }
 
   const handleEventMount = (info: EventMountArg) => {
@@ -121,10 +121,10 @@ export default function ScheduleCalendar({ events, layers, visibleLayers, mutate
     const dateStr = arg.date.toISOString().split('T')[0]
     const dayEvents = eventsByDate[dateStr] || []
     const count = dayEvents.length
-    const colorClass = getColorClass(count)
+    const colorStyle = getColorStyle(count)
     if (selectedDate === dateStr) {
       return (
-        <div className={`h-full w-full ${colorClass}`} title={`${count} events`}>
+        <div className="h-full w-full" style={colorStyle} title={`${count} events`} aria-label={`${count} events`}>
           <div className="fc-daygrid-day-number">{arg.dayNumberText}</div>
           <ul className="mt-1 text-xs">
             {dayEvents.map(e => (
@@ -143,7 +143,7 @@ export default function ScheduleCalendar({ events, layers, visibleLayers, mutate
       )
     }
     return (
-      <div className={`h-full w-full ${colorClass}`} title={`${count} events`}>
+      <div className="h-full w-full" style={colorStyle} title={`${count} events`} aria-label={`${count} events`}>
         <div className="fc-daygrid-day-number">{arg.dayNumberText}</div>
         <div className="flex flex-wrap gap-1 mt-1">
           {dayEvents.map(e => (
@@ -193,7 +193,7 @@ export default function ScheduleCalendar({ events, layers, visibleLayers, mutate
       <div className="flex items-center gap-2 mt-2 text-xs" aria-label="Event count legend">
         {[1, 2, 3, 4, 5].map(n => (
           <div key={n} className="flex items-center gap-1">
-            <span className={`w-3 h-3 rounded-sm ${getColorClass(n)}`} />
+            <span className="w-3 h-3 rounded-sm" style={getColorStyle(n)} />
             <span>{n}{n === 5 ? '+' : ''}</span>
           </div>
         ))}
