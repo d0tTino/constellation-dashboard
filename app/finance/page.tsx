@@ -94,11 +94,18 @@ export default function FinancePage() {
                 isBest ? 'border-green-500 bg-green-50' : ''
               }`}
             >
-              <div className="font-bold mb-2">
-                Option {label} - {option.category}
+              <div className="font-bold mb-2 flex items-center justify-between">
+                <span>
+                  Option {label} - {option.category}
+                </span>
+                {isBest && (
+                  <span className="ml-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded">
+                    Best
+                  </span>
+                )}
               </div>
               <p>Amount: ${option.amount}</p>
-              <p>Cost of deviation: ${option.costOfDeviation}</p>
+              {!isBest && <p>Cost of deviation: ${option.costOfDeviation}</p>}
               <button
                 className="mt-2 text-blue-500 underline"
                 onClick={() => {
