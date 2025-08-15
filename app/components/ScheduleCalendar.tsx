@@ -67,6 +67,31 @@ export default function ScheduleCalendar({ events, layers, visibleLayers, mutate
     return date.toLocaleDateString('en-CA')
   }
 
+  const backgroundEvents = useMemo(() => {
+    const dayLayer = new Set<string>()
+    filtered.forEach(e => {
+      if (!e.layer) return
+      const date = toLocalDate(e.start)
+      dayLayer.add(`${e.layer}|${date}`)
+    })
+    return Array.from(dayLayer).map(key => {
+      const [layerId, date] = key.split('|')
+      const layer = layers.find(l => l.id === layerId)
+      const endDate = new Date(date)
+      endDate.setDate(endDate.getDate() + 1)
+      return {
+        id: `bg-${layerId}-${date}`,
+        start: date,
+        end: endDate.toISOString().split('T')[0],
+        display: 'background' as const,
+        backgroundColor: layer?.color,
+        allDay: true
+      }
+    })
+  }, [filtered, layers])
+
+  const calendarEvents = useMemo(() => [...filtered, ...backgroundEvents], [filtered, backgroundEvents])
+
   const eventsByDate = useMemo(() => {
     return filtered.reduce<Record<string, Event[]>>((acc, e) => {
       const date = toLocalDate(e.start)
@@ -190,7 +215,7 @@ export default function ScheduleCalendar({ events, layers, visibleLayers, mutate
           center: 'title',
           right: 'dayGridMonth,timeGridWeek,timeGridDay'
         }}
-        events={filtered}
+        events={calendarEvents}
         editable
         eventDrop={handleDrop}
         eventDidMount={handleEventMount}
