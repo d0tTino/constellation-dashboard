@@ -127,8 +127,7 @@ describe('FinancePage', () => {
     expect(container.textContent).toContain('Failed to load budget options.');
   });
 
-  it('loads new data when the context cookie changes', async () => {
-    vi.useFakeTimers();
+  it('loads new data when the context cookie changes', () => {
     document.cookie = 'context=personal';
     const mutate = vi.fn();
     swrMock = vi.fn((key: string) => {
@@ -145,11 +144,10 @@ describe('FinancePage', () => {
     const { container } = render(<FinancePage />);
     expect(container.textContent).toContain('Rent');
     document.cookie = 'context=team-a';
-    await act(async () => {
-      vi.advanceTimersByTime(1000);
+    act(() => {
+      window.dispatchEvent(new Event('context-changed'));
     });
     expect(container.textContent).toContain('Office Rent');
-    vi.useRealTimers();
   });
 });
 

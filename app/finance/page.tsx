@@ -23,15 +23,16 @@ export default function FinancePage() {
   const [paymentSchedules, setPaymentSchedules] = useState<Record<string, any[]>>({})
   const [aiExplanations, setAiExplanations] = useState<Record<string, string>>({})
   useEffect(() => {
-    const interval = setInterval(() => {
+    const handleContextChange = () => {
       const match = document.cookie.match(/(?:^|; )context=([^;]+)/)
       const ctx = match ? match[1] : 'personal'
-      if (ctx !== context) {
-        setContext(ctx)
-      }
-    }, 1000)
-    return () => clearInterval(interval)
-  }, [context])
+      setContext(ctx)
+    }
+    window.addEventListener('context-changed', handleContextChange)
+    return () => {
+      window.removeEventListener('context-changed', handleContextChange)
+    }
+  }, [])
   const initialRender = useRef(true)
   useEffect(() => {
     if (initialRender.current) {
