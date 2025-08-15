@@ -8,6 +8,7 @@ import interactionPlugin, { EventDropArg, DateClickArg } from '@fullcalendar/int
 import { EventContentArg, EventMountArg } from '@fullcalendar/core'
 import { useCalendarEvents, useTaskStatus } from '../socket-context'
 import SharedEventTooltip from './SharedEventTooltip'
+import UserLegend from './UserLegend'
 
 interface Layer {
   id: string
@@ -25,6 +26,7 @@ interface Event {
   invitees?: string[]
   permissions?: string[]
   owner?: string
+  userColorMap?: Record<string, string>
 }
 
 interface ScheduleCalendarProps {
@@ -48,15 +50,37 @@ export default function ScheduleCalendar({ events, layers, visibleLayers, mutate
     if (taskStatus) mutate()
   }, [taskStatus, mutate])
 
+  const userColors = useMemo(() => {
+    const owners = Array.from(new Set(events.map(e => e.owner).filter(Boolean))) as string[]
+    const palette = [
+      '#1f77b4',
+      '#ff7f0e',
+      '#2ca02c',
+      '#d62728',
+      '#9467bd',
+      '#8c564b',
+      '#e377c2',
+      '#7f7f7f',
+      '#bcbd22',
+      '#17becf'
+    ]
+    const map: Record<string, string> = {}
+    owners.forEach((owner, idx) => {
+      map[owner] = palette[idx % palette.length]
+    })
+    return map
+  }, [events])
+
   const filtered = events
     .filter(e => !e.layer || visibleLayers.includes(e.layer))
     .map(e => {
       const layer = layers.find(l => l.id === e.layer)
-      const color = layer?.color
+      const color = (e.owner && userColors[e.owner]) || layer?.color
       return {
         ...e,
         backgroundColor: color,
-        borderColor: color
+        borderColor: color,
+        userColorMap: userColors
       }
     })
 
@@ -240,6 +264,7 @@ export default function ScheduleCalendar({ events, layers, visibleLayers, mutate
           </div>
         ))}
       </div>
+      <UserLegend userColors={userColors} />
     </div>
   )
 }
