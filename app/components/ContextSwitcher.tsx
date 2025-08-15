@@ -39,6 +39,7 @@ export default function ContextSwitcher() {
   const update = (value: ContextType) => {
     setContext(value)
     document.cookie = `context=${value}; path=/`
+    window.dispatchEvent(new Event('context-changed'))
   }
 
   if (!session) return null
