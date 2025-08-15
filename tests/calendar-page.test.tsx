@@ -279,6 +279,40 @@ describe('CalendarPage', () => {
     expect(container.textContent).toContain('US');
   });
 
+  it('reverts calendar when PATCH fails', async () => {
+    const mutate = vi.fn();
+    swrMock = vi.fn(() => ({
+      data: { events: [{ id: '1', title: 'a', start: '2023-01-01' }], layers: [] },
+      mutate,
+    }));
+
+    const fetchMock = vi.fn(() =>
+      Promise.resolve(
+        new Response(JSON.stringify({ success: false, error: 'Bad' }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      ),
+    );
+    // @ts-ignore
+    global.fetch = fetchMock;
+
+    const { container } = render(<CalendarPage />);
+
+    const revert = vi.fn();
+    await act(async () => {
+      await calendarProps.eventDrop({
+        event: { id: '1', startStr: '2023-01-02', endStr: '2023-01-02' },
+        revert,
+      });
+    });
+
+    expect(revert).toHaveBeenCalled();
+    expect(mutate).not.toHaveBeenCalled();
+    const alert = container.querySelector('[role="alert"]');
+    expect(alert?.textContent).toBe('Bad');
+  });
+
   it('revalidates when context cookie changes', async () => {
     const mutate = vi.fn();
     swrMock = vi.fn(() => ({ data: { events: [], layers: [] }, mutate }));
