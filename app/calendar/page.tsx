@@ -65,17 +65,15 @@ export default function CalendarPage() {
   }, [data.layers])
 
   useEffect(() => {
-    const interval = setInterval(() => {
+    const handleContextChange = () => {
       const current = getContext()
-      setContext(prev => {
-        if (prev !== current) {
-          mutate()
-          return current
-        }
-        return prev
-      })
-    }, 1000)
-    return () => clearInterval(interval)
+      setContext(current)
+      mutate()
+    }
+    window.addEventListener('context-changed', handleContextChange)
+    return () => {
+      window.removeEventListener('context-changed', handleContextChange)
+    }
   }, [mutate])
 
   const handleNL = (e: React.FormEvent) => {
