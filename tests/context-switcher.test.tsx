@@ -54,6 +54,16 @@ describe('ContextSwitcher', () => {
     expect(fetchMock).toHaveBeenCalledWith('/api/groups')
   })
 
+  it('renders an associated label', async () => {
+    render(<ContextSwitcher />)
+    await act(async () => {})
+    const label = document.querySelector('label')
+    const select = document.querySelector('select') as HTMLSelectElement
+    expect(label).toBeTruthy()
+    expect(label?.getAttribute('for')).toBe(select.id)
+    expect(label?.textContent).toContain('Context')
+  })
+
   it('updates cookie on selection change', async () => {
     document.cookie = 'context=team-a'
     render(<ContextSwitcher />)

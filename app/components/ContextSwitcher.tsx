@@ -45,13 +45,20 @@ export default function ContextSwitcher() {
   if (!session) return null
 
   return (
-    <select value={context} onChange={e => update(e.target.value)}>
-      <option value="personal">Personal</option>
-      {groups.map(g => (
-        <option key={g} value={g}>
-          {g}
-        </option>
-      ))}
-    </select>
+    <label htmlFor="context-select">
+      Context
+      <select
+        id="context-select"
+        value={context}
+        onChange={e => update(e.target.value)}
+      >
+        <option value="personal">Personal</option>
+        {groups.map(g => (
+          <option key={g} value={g}>
+            {g}
+          </option>
+        ))}
+      </select>
+    </label>
   )
 }
