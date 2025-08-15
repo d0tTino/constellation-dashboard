@@ -41,8 +41,8 @@ async function read(): Promise<CalendarData> {
         end: e.end,
         layer: e.layer,
         shared: e.shared,
-        invitees: e.invitees,
-        permissions: e.permissions,
+        invitees: e.invitees || [],
+        permissions: e.permissions || [],
         owner: e.owner,
         groupId: e.groupId,
       })),
@@ -67,8 +67,8 @@ async function write(data: CalendarData): Promise<void> {
       end: e.end,
       layer: e.layer,
       shared: e.shared,
-      invitees: e.invitees,
-      permissions: e.permissions,
+      invitees: e.invitees || [],
+      permissions: e.permissions || [],
       owner: e.owner,
       groupId: e.groupId,
     })),
@@ -80,14 +80,24 @@ async function write(data: CalendarData): Promise<void> {
 export async function getData(): Promise<CalendarData> {
   const data = await read()
   return {
-    events: data.events.map(e => ({ ...e, groupId: e.groupId })),
+    events: data.events.map(e => ({
+      ...e,
+      invitees: e.invitees || [],
+      permissions: e.permissions || [],
+      groupId: e.groupId,
+    })),
     layers: data.layers,
   }
 }
 
 export async function getEvents(): Promise<CalendarEvent[]> {
   const data = await read()
-  return data.events.map(e => ({ ...e, groupId: e.groupId }))
+  return data.events.map(e => ({
+    ...e,
+    invitees: e.invitees || [],
+    permissions: e.permissions || [],
+    groupId: e.groupId,
+  }))
 }
 
 export async function getLayers(): Promise<CalendarLayer[]> {
@@ -132,11 +142,17 @@ export function validateEvent(data: any): CalendarEvent {
   if (groupId !== undefined && typeof groupId !== 'string') {
     throw new Error('groupId must be string')
   }
-  if (invitees !== undefined && !Array.isArray(invitees)) {
-    throw new Error('invitees must be array')
+  if (
+    invitees !== undefined &&
+    (!Array.isArray(invitees) || invitees.some(i => typeof i !== 'string'))
+  ) {
+    throw new Error('invitees must be array of strings')
   }
-  if (permissions !== undefined && !Array.isArray(permissions)) {
-    throw new Error('permissions must be array')
+  if (
+    permissions !== undefined &&
+    (!Array.isArray(permissions) || permissions.some(p => typeof p !== 'string'))
+  ) {
+    throw new Error('permissions must be array of strings')
   }
   if (owner !== undefined && typeof owner !== 'string') {
     throw new Error('owner must be string')
@@ -150,8 +166,8 @@ export function validateEvent(data: any): CalendarEvent {
     layer,
     shared,
     groupId,
-    invitees,
-    permissions,
+    invitees: invitees || [],
+    permissions: permissions || [],
     owner,
 
   }
@@ -181,11 +197,19 @@ export function validateEventPatch(data: any): Partial<CalendarEvent> {
     result.shared = data.shared
   }
   if (data.invitees !== undefined) {
-    if (!Array.isArray(data.invitees)) throw new Error('invitees must be array')
+    if (
+      !Array.isArray(data.invitees) ||
+      data.invitees.some((i: any) => typeof i !== 'string')
+    )
+      throw new Error('invitees must be array of strings')
     result.invitees = data.invitees
   }
   if (data.permissions !== undefined) {
-    if (!Array.isArray(data.permissions)) throw new Error('permissions must be array')
+    if (
+      !Array.isArray(data.permissions) ||
+      data.permissions.some((p: any) => typeof p !== 'string')
+    )
+      throw new Error('permissions must be array of strings')
     result.permissions = data.permissions
   }
   if (data.owner !== undefined) {

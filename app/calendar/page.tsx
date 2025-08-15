@@ -49,6 +49,8 @@ export default function CalendarPage() {
   const [start, setStart] = useState('')
   const [end, setEnd] = useState('')
   const [shared, setShared] = useState(false)
+  const [invitees, setInvitees] = useState('')
+  const [permissions, setPermissions] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [selectedLayers, setSelectedLayers] = useState<string[]>([])
   const [layer, setLayer] = useState('')
@@ -96,10 +98,25 @@ export default function CalendarPage() {
     e.preventDefault()
     setError(null)
     const id = crypto.randomUUID()
+    const inviteeList = invitees.split(',').map(i => i.trim()).filter(Boolean)
+    const permissionList = permissions
+      .split(',')
+      .map(p => p.trim())
+      .filter(Boolean)
     const res = await fetch('/api/schedule', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, title, start, end, layer, shared, owner: session?.user?.id })
+      body: JSON.stringify({
+        id,
+        title,
+        start,
+        end,
+        layer,
+        shared,
+        invitees: inviteeList,
+        permissions: permissionList,
+        owner: session?.user?.id,
+      })
     })
     if (!res.ok) {
       let message = 'Failed to create event'
@@ -118,6 +135,8 @@ export default function CalendarPage() {
     setStart('')
     setEnd('')
     setShared(false)
+    setInvitees('')
+    setPermissions('')
     mutate()
   }
 
@@ -159,6 +178,20 @@ export default function CalendarPage() {
           type="date"
           value={end}
           onChange={e => setEnd(e.target.value)}
+          className="border mr-2"
+        />
+        <input
+          name="invitees"
+          placeholder="Invitees"
+          value={invitees}
+          onChange={e => setInvitees(e.target.value)}
+          className="border mr-2"
+        />
+        <input
+          name="permissions"
+          placeholder="Permissions"
+          value={permissions}
+          onChange={e => setPermissions(e.target.value)}
           className="border mr-2"
         />
         <select
