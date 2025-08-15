@@ -87,6 +87,32 @@ describe('CalendarPage', () => {
     ]);
   });
 
+  it('updates layer field when selecting from dropdown', () => {
+    const mutate = vi.fn();
+    swrMock = vi.fn(() => ({
+      data: {
+        events: [],
+        layers: [
+          { id: 'a', name: 'A', color: '#f00' },
+          { id: 'b', name: 'B', color: '#0f0' },
+        ],
+      },
+      mutate,
+    }));
+
+    const { container } = render(<CalendarPage />);
+
+    const layerSelect = container.querySelector('select[name="layer"]') as HTMLSelectElement;
+    expect(layerSelect.value).toBe('a');
+
+    act(() => {
+      layerSelect.value = 'b';
+      layerSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    expect(layerSelect.value).toBe('b');
+  });
+
   it('sends NL command with personal context', async () => {
     const mutate = vi.fn();
     swrMock = vi.fn(() => ({ data: { events: [], layers: [] }, mutate }));
@@ -197,6 +223,8 @@ describe('CalendarPage', () => {
       shared.checked = true;
       shared.dispatchEvent(new Event('change', { bubbles: true }));
     });
+
+    expect(layerSelect.value).toBe('b');
 
     await act(async () => {
       form.dispatchEvent(new Event('submit', { bubbles: true }));
