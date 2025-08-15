@@ -126,5 +126,30 @@ describe('FinancePage', () => {
     const { container } = render(<FinancePage />);
     expect(container.textContent).toContain('Failed to load budget options.');
   });
+
+  it('loads new data when the context cookie changes', async () => {
+    vi.useFakeTimers();
+    document.cookie = 'context=personal';
+    const mutate = vi.fn();
+    swrMock = vi.fn((key: string) => {
+      const match = key.match(/context=([^&]+)/);
+      const ctx = match ? match[1] : 'personal';
+      return {
+        data:
+          ctx === 'team-a'
+            ? [{ category: 'Office Rent', amount: 2000, costOfDeviation: 1000 }]
+            : [{ category: 'Rent', amount: 1000, costOfDeviation: 0 }],
+        mutate,
+      };
+    });
+    const { container } = render(<FinancePage />);
+    expect(container.textContent).toContain('Rent');
+    document.cookie = 'context=team-a';
+    await act(async () => {
+      vi.advanceTimersByTime(1000);
+    });
+    expect(container.textContent).toContain('Office Rent');
+    vi.useRealTimers();
+  });
 });
 
