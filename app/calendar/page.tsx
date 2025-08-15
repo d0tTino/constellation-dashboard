@@ -51,6 +51,7 @@ export default function CalendarPage() {
   const [shared, setShared] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedLayers, setSelectedLayers] = useState<string[]>([])
+  const [layer, setLayer] = useState('')
 
   const socket = useSocket()
   const { data: session } = useSession()
@@ -58,6 +59,9 @@ export default function CalendarPage() {
 
   useEffect(() => {
     setSelectedLayers(data.layers.map(l => l.id))
+    if (data.layers.length > 0) {
+      setLayer(prev => (prev && data.layers.some(l => l.id === prev) ? prev : data.layers[0].id))
+    }
   }, [data.layers])
 
   useEffect(() => {
@@ -93,7 +97,6 @@ export default function CalendarPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
-    const layer = selectedLayers[0]
     const id = crypto.randomUUID()
     const res = await fetch('/api/schedule', {
       method: 'POST',
@@ -160,6 +163,18 @@ export default function CalendarPage() {
           onChange={e => setEnd(e.target.value)}
           className="border mr-2"
         />
+        <select
+          name="layer"
+          value={layer}
+          onChange={e => setLayer(e.target.value)}
+          className="border mr-2"
+        >
+          {data.layers.map(l => (
+            <option key={l.id} value={l.id}>
+              {l.name}
+            </option>
+          ))}
+        </select>
         <label className="mr-2">
           <input
             name="shared"
