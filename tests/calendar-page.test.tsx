@@ -160,10 +160,16 @@ describe('CalendarPage', () => {
     expect(alert?.textContent).toBe('Forbidden');
   });
 
-  it('creates events with id and shared flag', async () => {
+  it('creates events with id, shared flag, and selected layer', async () => {
     const mutate = vi.fn();
     swrMock = vi.fn(() => ({
-      data: { events: [], layers: [{ id: 'a', name: 'A', color: '#f00' }] },
+      data: {
+        events: [],
+        layers: [
+          { id: 'a', name: 'A', color: '#f00' },
+          { id: 'b', name: 'B', color: '#0f0' },
+        ],
+      },
       mutate,
     }));
 
@@ -177,6 +183,7 @@ describe('CalendarPage', () => {
 
     const title = container.querySelector('input[name="title"]') as HTMLInputElement;
     const start = container.querySelector('input[name="start"]') as HTMLInputElement;
+    const layerSelect = container.querySelector('select[name="layer"]') as HTMLSelectElement;
     const shared = container.querySelector('input[name="shared"]') as HTMLInputElement;
     const form = title.closest('form') as HTMLFormElement;
 
@@ -185,6 +192,8 @@ describe('CalendarPage', () => {
       title.dispatchEvent(new Event('input', { bubbles: true }));
       start.value = '2023-01-01';
       start.dispatchEvent(new Event('input', { bubbles: true }));
+      layerSelect.value = 'b';
+      layerSelect.dispatchEvent(new Event('change', { bubbles: true }));
       shared.checked = true;
       shared.dispatchEvent(new Event('change', { bubbles: true }));
     });
@@ -197,6 +206,7 @@ describe('CalendarPage', () => {
     const body = JSON.parse(fetchMock.mock.calls[0][1].body);
     expect(body.id).toBe('uuid-1');
     expect(body.shared).toBe(true);
+    expect(body.layer).toBe('b');
     expect(body.owner).toBe('user1');
   });
 
