@@ -165,14 +165,11 @@ export default function ScheduleCalendar({ events, layers, visibleLayers, mutate
         <span>{arg.event.title}</span>
       </div>
     )
-    if (invitees.length || permissions.length) {
-      return (
-        <SharedEventTooltip invitees={invitees} permissions={permissions}>
-          {content}
-        </SharedEventTooltip>
-      )
-    }
-    return content
+    return (
+      <SharedEventTooltip invitees={invitees} permissions={permissions}>
+        {content}
+      </SharedEventTooltip>
+    )
   }
 
   const renderDayCell = (arg: DayCellContentArg) => {

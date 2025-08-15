@@ -238,6 +238,47 @@ describe('CalendarPage', () => {
     expect(body.owner).toBe('user1');
   });
 
+  it('creates events with invitees and permissions', async () => {
+    const mutate = vi.fn();
+    swrMock = vi.fn(() => ({
+      data: {
+        events: [],
+        layers: [
+          { id: 'a', name: 'A', color: '#f00' },
+          { id: 'b', name: 'B', color: '#0f0' },
+        ],
+      },
+      mutate,
+    }));
+
+    const fetchMock = vi.fn(() => Promise.resolve(new Response('{}', { status: 200 })));
+    // @ts-ignore
+    global.fetch = fetchMock;
+    // @ts-ignore
+    global.crypto = { randomUUID: () => 'uuid-2' };
+
+    const { container } = render(<CalendarPage />);
+
+    const invitees = container.querySelector('input[name="invitees"]') as HTMLInputElement;
+    const permissions = container.querySelector('input[name="permissions"]') as HTMLInputElement;
+    const form = invitees.closest('form') as HTMLFormElement;
+
+    act(() => {
+      invitees.value = 'Alice, Bob';
+      invitees.dispatchEvent(new Event('input', { bubbles: true }));
+      permissions.value = 'view, edit';
+      permissions.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+
+    await act(async () => {
+      form.dispatchEvent(new Event('submit', { bubbles: true }));
+    });
+
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+    expect(body.invitees).toEqual(['Alice', 'Bob']);
+    expect(body.permissions).toEqual(['view', 'edit']);
+  });
+
   it('renders shared events with distinctive styling', () => {
     const mutate = vi.fn();
     swrMock = vi.fn(() => ({

@@ -56,8 +56,12 @@ export async function POST(req: Request) {
     if (ctx === 'group' && !baseEvent.shared) {
       return new Response('Forbidden', { status: 403 })
     }
-    const event =
-      ctx === 'group' ? { ...baseEvent, groupId: groupId! } : baseEvent
+    const event = {
+      ...baseEvent,
+      invitees: baseEvent.invitees ?? [],
+      permissions: baseEvent.permissions ?? [],
+      ...(ctx === 'group' ? { groupId: groupId! } : {}),
+    }
     await addEvent(event)
     sendWsMessage({ type: 'calendar.event.created', event }, (session as any).accessToken)
     return Response.json({ success: true })
