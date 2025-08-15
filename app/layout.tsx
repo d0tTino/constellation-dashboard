@@ -1,10 +1,10 @@
 import "./globals.css";
 import { SocketProvider } from "./socket-context";
-import { ReactNode, useEffect } from 'react';
+import { ReactNode } from 'react';
 
 import { SWRProvider } from '../lib/swr';
 import Link from 'next/link';
-import { SessionProvider, signIn, signOut, useSession } from 'next-auth/react';
+import { SessionProvider, signOut, useSession } from 'next-auth/react';
 import { ThemeProvider, useTheme } from './theme-context';
 import ContextSwitcher from './components/ContextSwitcher';
 
@@ -41,7 +41,7 @@ function Shell({ children }: { children: ReactNode }) {
   );
 }
 
-function ShellContent({
+export function ShellContent({
   children,
   toggleTheme,
 }: {
@@ -58,7 +58,7 @@ function ShellContent({
           {session ? (
             <button type="button" onClick={() => signOut()}>Sign out</button>
           ) : (
-            <button type="button" onClick={() => signIn()}>Sign in</button>
+            <Link href="/login">Sign in</Link>
           )}
           <ContextSwitcher />
           <button type="button" onClick={toggleTheme}>Toggle Theme</button>
