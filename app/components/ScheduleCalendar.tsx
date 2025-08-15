@@ -59,9 +59,17 @@ export default function ScheduleCalendar({ events, layers, visibleLayers, mutate
       }
     })
 
+  // FullCalendar renders month cells in local time. Using UTC dates would
+  // shift events and break the heatmap counts, so always derive dates in
+  // local time.
+  const toLocalDate = (d: Date | string) => {
+    const date = typeof d === 'string' ? new Date(d) : d
+    return date.toLocaleDateString('en-CA')
+  }
+
   const eventsByDate = useMemo(() => {
     return filtered.reduce<Record<string, Event[]>>((acc, e) => {
-      const date = e.start.split('T')[0]
+      const date = toLocalDate(e.start)
       acc[date] = acc[date] ? [...acc[date], e] : [e]
       return acc
     }, {})
@@ -118,7 +126,7 @@ export default function ScheduleCalendar({ events, layers, visibleLayers, mutate
   }
 
   const renderDayCell = (arg: DayCellContentArg) => {
-    const dateStr = arg.date.toISOString().split('T')[0]
+    const dateStr = toLocalDate(arg.date)
     const dayEvents = eventsByDate[dateStr] || []
     const count = dayEvents.length
     const colorStyle = getColorStyle(count)
@@ -159,7 +167,7 @@ export default function ScheduleCalendar({ events, layers, visibleLayers, mutate
   }
 
   const handleDateClick = (arg: DateClickArg) => {
-    const dateStr = arg.dateStr
+    const dateStr = toLocalDate(arg.date)
     setSelectedDate(prev => (prev === dateStr ? null : dateStr))
   }
 
