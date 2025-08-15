@@ -100,6 +100,7 @@ describe('socket event propagation', () => {
       </SocketProvider>
     );
     await act(async () => {});
+    mutate.mockReset();
     await act(async () => {
       onmessage?.({ data: JSON.stringify({ type: 'finance.decision.result' }) });
     });
