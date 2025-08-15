@@ -38,6 +38,7 @@ export default function ScheduleCalendar({ events, layers, visibleLayers, mutate
   const event = useCalendarEvents()
   const taskStatus = useTaskStatus()
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (event) mutate()
@@ -197,16 +198,24 @@ export default function ScheduleCalendar({ events, layers, visibleLayers, mutate
   }
 
   const handleDrop = async (arg: EventDropArg) => {
-    await fetch(`/api/task/${arg.event.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ start: arg.event.startStr, end: arg.event.endStr })
-    })
-    mutate()
+    try {
+      const res = await fetch(`/api/task/${arg.event.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ start: arg.event.startStr, end: arg.event.endStr })
+      })
+      if (!res.ok) throw new Error('Request failed')
+      mutate()
+      setError(null)
+    } catch (err) {
+      arg.revert()
+      setError('Failed to update event')
+    }
   }
 
   return (
     <div>
+      {error && <p role="alert" className="text-red-500">{error}</p>}
       <FullCalendar
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
         initialView="dayGridMonth"
