@@ -138,7 +138,7 @@ describe('schedule group permissions', () => {
       body: JSON.stringify({ start: '2024-05-01' }),
       headers: {
         'Content-Type': 'application/json',
-        cookie: 'context=team-a',
+        cookie: 'context=group; groupId=team-a',
       },
     })
     const badRes = await PATCH(badReq, { params: { id: '3' } })
@@ -152,7 +152,7 @@ describe('schedule group permissions', () => {
       body: JSON.stringify({ start: '2024-05-01' }),
       headers: {
         'Content-Type': 'application/json',
-        cookie: 'context=team-a',
+        cookie: 'context=group; groupId=team-a',
       },
     })
     const okRes = await PATCH(okReq, { params: { id: '3' } })

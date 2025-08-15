@@ -1,7 +1,7 @@
 import { getEvent, updateEvent, validateEventPatch } from '../../schedule/store'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../../auth/[...nextauth]/route'
-import { getRequestContext } from '../../../../lib/context'
+import { getContextAndGroupId } from '../../../../lib/context-utils'
 import { sendWsMessage } from '../../../../lib/ws-server'
 
 export async function GET(
@@ -16,12 +16,12 @@ export async function GET(
   if (!event) {
     return new Response('Not found', { status: 404 })
   }
-  const ctx = getRequestContext(req)
+  const { context: ctx, groupId: requested } = getContextAndGroupId(req)
   const groupId = (event as any).groupId
   if (ctx === 'group') {
-    const cookie = req.headers.get('cookie') || ''
-    const match = cookie.match(/(?:^|; )context=([^;]+)/)
-    const requested = match ? decodeURIComponent(match[1]) : ''
+    if (!requested) {
+      return new Response('groupId required', { status: 400 })
+    }
     const groups = session.user?.groups ?? []
     if (!event.shared || !groupId || groupId !== requested || !groups.includes(groupId)) {
       return new Response('Forbidden', { status: 403 })
@@ -44,12 +44,12 @@ export async function PATCH(
   if (!existing) {
     return new Response('Not found', { status: 404 })
   }
-  const ctx = getRequestContext(req)
+  const { context: ctx, groupId: requested } = getContextAndGroupId(req)
   const groupId = (existing as any).groupId
   if (ctx === 'group') {
-    const cookie = req.headers.get('cookie') || ''
-    const match = cookie.match(/(?:^|; )context=([^;]+)/)
-    const requested = match ? decodeURIComponent(match[1]) : ''
+    if (!requested) {
+      return new Response('groupId required', { status: 400 })
+    }
     const groups = session.user?.groups ?? []
     if (!existing.shared || !groupId || groupId !== requested || !groups.includes(groupId)) {
       return new Response('Forbidden', { status: 403 })
