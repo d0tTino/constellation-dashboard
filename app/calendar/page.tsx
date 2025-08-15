@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import useSWR from 'swr'
 import { fetcher } from '../../lib/swr'
+import { AppContext } from '../../lib/context'
 import ScheduleCalendar from '../components/ScheduleCalendar'
 import CalendarLayerPanel from '../components/CalendarLayerPanel'
 import { useSocket } from '../socket-context'
@@ -31,10 +32,17 @@ interface CalendarData {
   layers: Layer[]
 }
 
+const getContext = (): AppContext => {
+  const match = document.cookie.match(/(?:^|; )context=([^;]+)/)
+  const value = match ? decodeURIComponent(match[1]) : 'personal'
+  return value === 'personal' ? 'personal' : 'group'
+}
+
 export default function CalendarPage() {
+  const [context, setContext] = useState<AppContext>(getContext())
   const { data = { events: [], layers: [] } as CalendarData, mutate } = useSWR<CalendarData>(
-    '/api/schedule',
-    fetcher,
+    ['/api/schedule', context],
+    ([url]) => fetcher(url),
     { refreshInterval: 30000 },
   )
   const [title, setTitle] = useState('')
@@ -51,6 +59,20 @@ export default function CalendarPage() {
   useEffect(() => {
     setSelectedLayers(data.layers.map(l => l.id))
   }, [data.layers])
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const current = getContext()
+      setContext(prev => {
+        if (prev !== current) {
+          mutate()
+          return current
+        }
+        return prev
+      })
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [mutate])
 
   const handleNL = (e: React.FormEvent) => {
     e.preventDefault()
