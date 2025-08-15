@@ -240,4 +240,32 @@ describe('CalendarPage', () => {
     });
     expect(container.textContent).toContain('US');
   });
+
+  it('revalidates when context cookie changes', async () => {
+    const mutate = vi.fn();
+    swrMock = vi.fn(() => ({ data: { events: [], layers: [] }, mutate }));
+    vi.useFakeTimers();
+    render(<CalendarPage />);
+
+    expect(swrMock).toHaveBeenNthCalledWith(
+      1,
+      ['/api/schedule', 'personal'],
+      expect.any(Function),
+      expect.objectContaining({ refreshInterval: 30000 }),
+    );
+
+    document.cookie = 'context=team-a';
+    await act(async () => {
+      vi.advanceTimersByTime(1000);
+    });
+
+    expect(mutate).toHaveBeenCalled();
+    expect(swrMock).toHaveBeenNthCalledWith(
+      2,
+      ['/api/schedule', 'group'],
+      expect.any(Function),
+      expect.objectContaining({ refreshInterval: 30000 }),
+    );
+    vi.useRealTimers();
+  });
 });
