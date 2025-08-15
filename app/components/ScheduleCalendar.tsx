@@ -228,7 +228,18 @@ export default function ScheduleCalendar({ events, layers, visibleLayers, mutate
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ start: arg.event.startStr, end: arg.event.endStr })
       })
-      if (!res.ok) throw new Error('Request failed')
+
+      let data: any = null
+      try {
+        data = await res.json()
+      } catch {}
+
+      if (!res.ok || !data?.success) {
+        arg.revert()
+        setError(data?.error || 'Failed to update event')
+        return
+      }
+
       mutate()
       setError(null)
     } catch (err) {
