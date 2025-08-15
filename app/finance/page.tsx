@@ -8,8 +8,12 @@ import { useFinanceUpdates, useSocket } from '../socket-context'
 export default function FinancePage() {
   const [budget, setBudget] = useState(1000)
   const [payoffTime, setPayoffTime] = useState(12)
+  const [context, setContext] = useState(() => {
+    const match = document.cookie.match(/(?:^|; )context=([^;]+)/)
+    return match ? match[1] : 'personal'
+  })
   const { data, error, mutate } = useSWR<BudgetOption[]>(
-    `/api/v1/report/budget?budget=${budget}&payoffTime=${payoffTime}`,
+    `/api/v1/report/budget?budget=${budget}&payoffTime=${payoffTime}&context=${context}`,
     fetcher,
     { refreshInterval: 30000 },
   )
@@ -18,6 +22,19 @@ export default function FinancePage() {
   const socket = useSocket()
   const [paymentSchedules, setPaymentSchedules] = useState<Record<string, any[]>>({})
   const [aiExplanations, setAiExplanations] = useState<Record<string, string>>({})
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const match = document.cookie.match(/(?:^|; )context=([^;]+)/)
+      const ctx = match ? match[1] : 'personal'
+      if (ctx !== context) {
+        setContext(ctx)
+      }
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [context])
+  useEffect(() => {
+    mutate()
+  }, [context, mutate])
   useEffect(() => {
     if (!update) return
     mutate()
