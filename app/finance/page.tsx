@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import useSWR from 'swr'
 import { fetcher } from '../../lib/swr'
 import { BudgetOption, rankBudgetOptions } from '../../lib/finance'
@@ -32,7 +32,12 @@ export default function FinancePage() {
     }, 1000)
     return () => clearInterval(interval)
   }, [context])
+  const initialRender = useRef(true)
   useEffect(() => {
+    if (initialRender.current) {
+      initialRender.current = false
+      return
+    }
     mutate()
   }, [context, mutate])
   useEffect(() => {
