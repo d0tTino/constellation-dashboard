@@ -243,3 +243,11 @@ export async function updateEvent(
   data.events[idx] = { ...data.events[idx], ...patch }
   await write(data)
 }
+
+export async function removeEvent(id: string): Promise<void> {
+  const data = await read()
+  const idx = data.events.findIndex(e => e.id === id)
+  if (idx === -1) throw new Error('Not found')
+  data.events.splice(idx, 1)
+  await write(data)
+}
