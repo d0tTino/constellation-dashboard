@@ -43,7 +43,13 @@ export default function ScheduleCalendar({ events, layers, visibleLayers, mutate
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (event) mutate()
+    if (
+      event?.type === 'calendar.event.created' ||
+      event?.type === 'calendar.event.updated' ||
+      event?.type === 'calendar.event.deleted'
+    ) {
+      mutate()
+    }
   }, [event, mutate])
 
   useEffect(() => {
@@ -131,6 +137,24 @@ export default function ScheduleCalendar({ events, layers, visibleLayers, mutate
     return { backgroundColor: `rgba(59, 130, 246, ${intensity})` }
   }
 
+  const handleDelete = async (id: string) => {
+    try {
+      setError(null)
+      const res = await fetch(`/api/task/${id}`, { method: 'DELETE' })
+      let data: any = null
+      try {
+        data = await res.json()
+      } catch {}
+      if (!res.ok || !data?.success) {
+        setError(data?.error || 'Failed to delete event')
+        return
+      }
+      mutate()
+    } catch {
+      setError('Failed to delete event')
+    }
+  }
+
   const handleEventMount = (info: EventMountArg) => {
     const shared = info.event.extendedProps.shared
     if (info.view.type === 'dayGridMonth') {
@@ -191,6 +215,13 @@ export default function ScheduleCalendar({ events, layers, visibleLayers, mutate
                 {e.shared && <span className="mr-1">👥</span>}
                 {e.owner && <span className="mr-1">{e.owner.slice(0, 2).toUpperCase()}</span>}
                 {e.title || '(no title)'}
+                <button
+                  className="ml-2 underline"
+                  onClick={() => handleDelete(e.id)}
+                  aria-label={`Delete ${e.title || 'event'}`}
+                >
+                  Delete
+                </button>
               </li>
             ))}
           </ul>
