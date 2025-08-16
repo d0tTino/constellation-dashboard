@@ -16,6 +16,7 @@ import {
   useSocketStatus,
 } from '../app/socket-context';
 import ConnectionStatus from '../app/components/ConnectionStatus';
+import { signIn } from 'next-auth/react';
 
 function render(ui: React.ReactElement) {
   const container = document.createElement('div');
@@ -228,5 +229,65 @@ describe('SocketProvider', () => {
 
     expect(wsMock).toHaveBeenCalledTimes(2);
     vi.useRealTimers();
+  });
+
+  it.each([401, 4001, 4401])('signs in on auth failure close code %i', async (code) => {
+    const signInMock = vi.mocked(signIn);
+    signInMock.mockClear();
+
+    const wsInstance: any = {
+      close: vi.fn(),
+      onopen: null,
+      onclose: null,
+      onerror: null,
+      onmessage: null,
+    };
+
+    const wsMock = vi.fn(() => wsInstance as unknown as WebSocket);
+    vi.stubGlobal('WebSocket', wsMock);
+
+    render(
+      <SocketProvider>
+        <div />
+      </SocketProvider>
+    );
+
+    await act(async () => {});
+
+    await act(async () => {
+      wsInstance.onclose?.({ code, reason: 'auth failed' });
+    });
+
+    expect(signInMock).toHaveBeenCalled();
+  });
+
+  it('does not sign in on normal closure', async () => {
+    const signInMock = vi.mocked(signIn);
+    signInMock.mockClear();
+
+    const wsInstance: any = {
+      close: vi.fn(),
+      onopen: null,
+      onclose: null,
+      onerror: null,
+      onmessage: null,
+    };
+
+    const wsMock = vi.fn(() => wsInstance as unknown as WebSocket);
+    vi.stubGlobal('WebSocket', wsMock);
+
+    render(
+      <SocketProvider>
+        <div />
+      </SocketProvider>
+    );
+
+    await act(async () => {});
+
+    await act(async () => {
+      wsInstance.onclose?.({ code: 1000, reason: 'normal closure' });
+    });
+
+    expect(signInMock).not.toHaveBeenCalled();
   });
 });
