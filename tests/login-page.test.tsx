@@ -39,6 +39,7 @@ vi.mock('../app/socket-context', () => {
     SocketProvider: ({ children }: any) => React.createElement('div', null, children),
     useSocket: () => null,
     useTaskStatus: () => null,
+    useSocketStatus: () => ({ connectionState: 'open', lastError: null, retry: () => {} }),
   };
 });
 

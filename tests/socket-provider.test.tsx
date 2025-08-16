@@ -8,7 +8,14 @@ vi.mock('next-auth/react', () => ({
   signIn: vi.fn(),
 }));
 
-import { SocketProvider, useSocket, useCalendarEvents, useFinanceUpdates } from '../app/socket-context';
+import {
+  SocketProvider,
+  useSocket,
+  useCalendarEvents,
+  useFinanceUpdates,
+  useSocketStatus,
+} from '../app/socket-context';
+import ConnectionStatus from '../app/components/ConnectionStatus';
 
 function render(ui: React.ReactElement) {
   const container = document.createElement('div');
@@ -143,5 +150,83 @@ describe('SocketProvider', () => {
       wsInstance.onmessage?.({ data: JSON.stringify(financeData) });
     });
     expect(financeUpdate).toEqual(financeData);
+  });
+
+  it('tracks connection state transitions and errors', async () => {
+    const wsInstance: any = {
+      close: vi.fn(),
+      onopen: null,
+      onclose: null,
+      onerror: null,
+      onmessage: null,
+    };
+
+    const wsMock = vi.fn(() => wsInstance as unknown as WebSocket);
+    vi.stubGlobal('WebSocket', wsMock);
+
+    let status: ReturnType<typeof useSocketStatus> | null = null;
+    function GetStatus() {
+      status = useSocketStatus();
+      return null;
+    }
+
+    render(
+      <SocketProvider>
+        <GetStatus />
+      </SocketProvider>
+    );
+
+    expect(status?.connectionState).toBe('connecting');
+
+    await act(async () => {
+      wsInstance.onopen?.({});
+    });
+    expect(status?.connectionState).toBe('open');
+
+    const closeEvent = { code: 1006, reason: 'abnormal closure' };
+    await act(async () => {
+      wsInstance.onclose?.(closeEvent);
+    });
+    expect(status?.connectionState).toBe('error');
+    expect(status?.lastError).toEqual({ code: 1006, message: 'abnormal closure' });
+  });
+
+  it('displays error status and retries on click', async () => {
+    vi.useFakeTimers();
+    const wsInstances: any[] = [];
+
+    class MockWebSocket {
+      onopen: ((ev: any) => void) | null = null;
+      onclose: ((ev: any) => void) | null = null;
+      onerror: ((ev: any) => void) | null = null;
+      onmessage: ((ev: any) => void) | null = null;
+      close = vi.fn();
+      constructor() {
+        wsInstances.push(this);
+      }
+    }
+
+    const wsMock = vi.fn(() => new (MockWebSocket as any)());
+    vi.stubGlobal('WebSocket', wsMock);
+
+    const { container } = render(
+      <SocketProvider>
+        <ConnectionStatus />
+      </SocketProvider>
+    );
+
+    await act(async () => {
+      wsInstances[0].onclose?.({ code: 1006, reason: 'fail' });
+    });
+
+    const div = container.querySelector('div');
+    expect(div?.textContent).toContain('fail');
+
+    await act(async () => {
+      div?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(wsMock).toHaveBeenCalledTimes(2);
+    vi.useRealTimers();
   });
 });

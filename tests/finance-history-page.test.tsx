@@ -9,6 +9,7 @@ vi.mock('../app/socket-context', () => ({
   __esModule: true,
   useFinanceUpdates: () => null,
   useTaskStatus: () => null,
+  useSocketStatus: () => ({ connectionState: 'open', lastError: null, retry: () => {} }),
 }));
 
 import FinanceHistoryPage from '../app/finance/history';

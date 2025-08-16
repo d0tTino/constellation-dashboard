@@ -12,6 +12,7 @@ vi.mock('../app/socket-context', () => ({
   __esModule: true,
   useSocket: () => ws,
   useTaskStatus: () => null,
+  useSocketStatus: () => ({ connectionState: 'open', lastError: null, retry: () => {} }),
 }));
 
 vi.mock('recharts', () => {
