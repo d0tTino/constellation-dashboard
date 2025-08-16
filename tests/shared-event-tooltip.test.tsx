@@ -33,7 +33,28 @@ describe('SharedEventTooltip', () => {
     expect(tooltip).toBeTruthy()
     expect(tooltip.textContent).toContain('Invitees: Alice, Bob')
     expect(tooltip.textContent).toContain('Permissions: view, edit')
-    expect(tooltip.getAttribute('role')).toBe('tooltip')
+    expect(trigger.getAttribute('aria-describedby')).toBe(tooltip.id)
+  })
+
+  it('toggles tooltip on focus and blur for keyboard users', () => {
+    render(
+      <SharedEventTooltip invitees={['Carol']} permissions={['view']}>
+        <span>Event</span>
+      </SharedEventTooltip>
+    )
+    const trigger = document.querySelector('div[tabindex="0"]') as HTMLElement
+    act(() => {
+      trigger.focus()
+    })
+    let tooltip = document.querySelector('[role="tooltip"]') as HTMLElement | null
+    expect(tooltip).toBeTruthy()
+    expect(trigger.getAttribute('aria-describedby')).toBe(tooltip!.id)
+    act(() => {
+      trigger.blur()
+    })
+    tooltip = document.querySelector('[role="tooltip"]')
+    expect(tooltip).toBeNull()
+    expect(trigger.hasAttribute('aria-describedby')).toBe(false)
   })
 })
 
