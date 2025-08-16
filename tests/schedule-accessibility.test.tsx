@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { act } from 'react-dom/test-utils'
 import ScheduleCalendar from '../app/components/ScheduleCalendar'
+import CalendarLayerPanel from '../app/components/CalendarLayerPanel'
 
 vi.mock('../app/socket-context', () => ({
   __esModule: true,
@@ -54,6 +55,19 @@ describe('ScheduleCalendar accessibility', () => {
     expect(tooltip).toBeTruthy()
     expect(tooltip.textContent).toContain('Invitees: Alice, Bob')
     expect(tooltip.textContent).toContain('Permissions: view, edit')
+  })
+
+  it('announces layer color', () => {
+    render(
+      <CalendarLayerPanel
+        layers={[{ id: '1', name: 'Test Layer', color: '#ff0000' }]}
+        selected={[]}
+        onToggle={() => {}}
+      />
+    )
+    const colorLabel = document.querySelector('.sr-only') as HTMLElement
+    expect(colorLabel).toBeTruthy()
+    expect(colorLabel.textContent).toBe('Color: #ff0000')
   })
 })
 
