@@ -34,7 +34,7 @@ describe('calendar websocket notifications', () => {
     vi.clearAllMocks()
   })
 
-  it('sends messages on create and update', async () => {
+  it('sends messages on create, update and delete', async () => {
     process.env.NEXT_PUBLIC_WS_URL = 'ws://test'
     process.env.SCHEDULE_DATA_FILE = file
     await fs.writeFile(file, JSON.stringify({ events: [], layers: [] }))
@@ -51,7 +51,7 @@ describe('calendar websocket notifications', () => {
 
     const {
       schedule: { POST },
-      task: { PATCH },
+      task: { PATCH, DELETE },
     } = await loadModules()
 
     const event = { id: '1', start: '2024-01-01', shared: false }
@@ -78,6 +78,17 @@ describe('calendar websocket notifications', () => {
     expect(JSON.parse(send.mock.calls[1][0])).toMatchObject({
       type: 'calendar.event.updated',
       event: { ...event, title: 'Updated' },
+    })
+
+    const delReq = new Request('http://test', {
+      method: 'DELETE',
+      headers: { cookie: 'context=personal' },
+    })
+    await DELETE(delReq, { params: { id: event.id } })
+    expect(send).toHaveBeenCalledTimes(3)
+    expect(JSON.parse(send.mock.calls[2][0])).toMatchObject({
+      type: 'calendar.event.deleted',
+      id: event.id,
     })
   })
 })

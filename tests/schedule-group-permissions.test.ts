@@ -171,5 +171,52 @@ describe('schedule group permissions', () => {
     const data = await verify.json()
     expect(data.events.find((e: any) => e.id === '3').start).toBe('2024-05-01')
   })
+
+  it('DELETE /api/task/:id enforces group membership', async () => {
+    process.env.SCHEDULE_DATA_FILE = file
+    await fs.writeFile(
+      file,
+      JSON.stringify({
+        events: [{ id: '4', start: '2024-06-01', shared: true, groupId: 'team-a' }],
+        layers: [],
+      }),
+    )
+
+    const {
+      task: { DELETE },
+      schedule: { GET },
+    } = await loadModules()
+
+    vi.mocked(getServerSession).mockResolvedValue({
+      user: { id: '1' },
+      groups: ['team-b'],
+    })
+    const badReq = new Request('http://test', {
+      method: 'DELETE',
+      headers: { cookie: 'context=group; groupId=team-a' },
+    })
+    const badRes = await DELETE(badReq, { params: { id: '4' } })
+    expect(badRes.status).toBe(403)
+
+    vi.mocked(getServerSession).mockResolvedValue({
+      user: { id: '1' },
+      groups: ['team-a'],
+    })
+    const okReq = new Request('http://test', {
+      method: 'DELETE',
+      headers: { cookie: 'context=group; groupId=team-a' },
+    })
+    const okRes = await DELETE(okReq, { params: { id: '4' } })
+    expect(okRes.status).toBe(200)
+    expect(await okRes.json()).toEqual({ success: true })
+
+    const verify = await GET(
+      new Request('http://test', {
+        headers: { cookie: 'context=group; groupId=team-a' },
+      }),
+    )
+    const data = await verify.json()
+    expect(data.events.find((e: any) => e.id === '4')).toBeFalsy()
+  })
 })
 

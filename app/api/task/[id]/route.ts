@@ -1,4 +1,9 @@
-import { getEvent, updateEvent, validateEventPatch } from '../../schedule/store'
+import {
+  getEvent,
+  updateEvent,
+  validateEventPatch,
+  removeEvent,
+} from '../../schedule/store'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../../auth/[...nextauth]/route'
 import { getContextAndGroupId } from '../../../../lib/context-utils'
@@ -75,4 +80,37 @@ export async function PATCH(
   } catch (e: any) {
     return Response.json({ error: e.message }, { status: 400 })
   }
+}
+
+export async function DELETE(
+  req: Request,
+  { params }: { params: { id: string } },
+) {
+  const session = await getServerSession(authOptions)
+  if (!session) {
+    return new Response('Unauthorized', { status: 401 })
+  }
+  const existing = await getEvent(params.id)
+  if (!existing) {
+    return new Response('Not found', { status: 404 })
+  }
+  const { context: ctx, groupId: requested } = getContextAndGroupId(req)
+  const groupId = (existing as any).groupId
+  if (ctx === 'group') {
+    if (!requested) {
+      return new Response('groupId required', { status: 400 })
+    }
+    const groups = session.groups ?? []
+    if (!existing.shared || !groupId || groupId !== requested || !groups.includes(groupId)) {
+      return new Response('Forbidden', { status: 403 })
+    }
+  } else if (existing.shared) {
+    return new Response('Forbidden', { status: 403 })
+  }
+  await removeEvent(params.id)
+  sendWsMessage(
+    { type: 'calendar.event.deleted', id: params.id },
+    (session as any).accessToken,
+  )
+  return Response.json({ success: true })
 }
