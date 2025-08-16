@@ -24,7 +24,12 @@ export default function CalendarLayerPanel({ layers, selected, onToggle }: Calen
             checked={selected.includes(layer.id)}
             onChange={() => onToggle(layer.id)}
           />
-          <span className="w-3 h-3 inline-block" style={{ backgroundColor: layer.color }} />
+          <span
+            className="w-3 h-3 inline-block"
+            style={{ backgroundColor: layer.color }}
+            aria-hidden="true"
+          />
+          <span className="sr-only">Color: {layer.color}</span>
           <span>{layer.name}</span>
         </label>
       ))}
