@@ -195,7 +195,7 @@ describe('schedule API routes', () => {
     const postReq = new Request('http://test', {
       method: 'POST',
       body: JSON.stringify(event),
-      headers: { 'Content-Type': 'application/json', cookie: 'context=team-a' },
+      headers: { 'Content-Type': 'application/json', cookie: 'context=group; groupId=team-a' },
     })
     await POST(postReq)
 
@@ -204,7 +204,7 @@ describe('schedule API routes', () => {
       groups: ['team-a'],
     })
     const getRes = await GET(
-      new Request('http://test', { headers: { cookie: 'context=team-a' } }),
+      new Request('http://test', { headers: { cookie: 'context=group; groupId=team-a' } }),
       { params: { id: event.id } },
     )
     expect(getRes.status).toBe(200)
@@ -216,7 +216,7 @@ describe('schedule API routes', () => {
       groups: ['team-a'],
     })
     const badGet = await GET(
-      new Request('http://test', { headers: { cookie: 'context=team-b' } }),
+      new Request('http://test', { headers: { cookie: 'context=group; groupId=team-b' } }),
       { params: { id: event.id } },
     )
     expect(badGet.status).toBe(403)
@@ -228,7 +228,7 @@ describe('schedule API routes', () => {
     const patchReq = new Request('http://test', {
       method: 'PATCH',
       body: JSON.stringify({ title: 'Updated' }),
-      headers: { 'Content-Type': 'application/json', cookie: 'context=team-a' },
+      headers: { 'Content-Type': 'application/json', cookie: 'context=group; groupId=team-a' },
     })
     const patchRes = await PATCH(patchReq, { params: { id: event.id } })
     expect(patchRes.status).toBe(403)
@@ -253,7 +253,7 @@ describe('budget report API route', () => {
     ])
 
     const resGroup = await GET(
-      new Request('http://test', { headers: { cookie: 'context=team-a' } }),
+      new Request('http://test', { headers: { cookie: 'context=group; groupId=team-a' } }),
     )
     const dataGroup = await resGroup.json()
     expect(dataGroup).toEqual([

@@ -4,16 +4,14 @@ import useSWR from 'swr'
 import { fetcher } from '../../lib/swr'
 import { BudgetOption, rankBudgetOptions } from '../../lib/finance'
 import { useFinanceUpdates, useSocket } from '../socket-context'
+import { getClientContext } from '../../lib/client-context'
 
 export default function FinancePage() {
   const [budget, setBudget] = useState(1000)
   const [payoffTime, setPayoffTime] = useState(12)
-  const [context, setContext] = useState(() => {
-    const match = document.cookie.match(/(?:^|; )context=([^;]+)/)
-    return match ? match[1] : 'personal'
-  })
+  const [{ context, groupId }, setCtx] = useState(() => getClientContext())
   const { data, error, mutate } = useSWR<BudgetOption[]>(
-    `/api/v1/report/budget?budget=${budget}&payoffTime=${payoffTime}&context=${context}`,
+    `/api/v1/report/budget?budget=${budget}&payoffTime=${payoffTime}&context=${context}&groupId=${groupId ?? ''}`,
     fetcher,
     { refreshInterval: 30000 },
   )
@@ -24,9 +22,7 @@ export default function FinancePage() {
   const [aiExplanations, setAiExplanations] = useState<Record<string, string>>({})
   useEffect(() => {
     const handleContextChange = () => {
-      const match = document.cookie.match(/(?:^|; )context=([^;]+)/)
-      const ctx = match ? match[1] : 'personal'
-      setContext(ctx)
+      setCtx(getClientContext())
     }
     window.addEventListener('context-changed', handleContextChange)
     return () => {
@@ -40,7 +36,7 @@ export default function FinancePage() {
       return
     }
     mutate()
-  }, [context, mutate])
+  }, [context, groupId, mutate])
   useEffect(() => {
     if (!update) return
     mutate()

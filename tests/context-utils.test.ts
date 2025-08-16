@@ -26,12 +26,12 @@ describe('getContextAndGroupId', () => {
     expect(groupId).toBe('team-b')
   })
 
-  it('uses context cookie value when it stores groupId', () => {
+  it('returns undefined groupId when cookie missing', () => {
     const req = new Request('http://test', {
-      headers: { cookie: 'context=team-c' },
+      headers: { cookie: 'context=group' },
     })
     const { context, groupId } = getContextAndGroupId(req)
     expect(context).toBe('group')
-    expect(groupId).toBe('team-c')
+    expect(groupId).toBeUndefined()
   })
 })

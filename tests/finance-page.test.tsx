@@ -31,6 +31,7 @@ describe('FinancePage', () => {
     document.body.innerHTML = '';
     send = vi.fn();
     financeUpdate = null;
+    document.cookie = 'groupId=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
   });
 
   it('labels options, highlights best choice, and shows modal content', () => {
@@ -131,11 +132,13 @@ describe('FinancePage', () => {
     document.cookie = 'context=personal';
     const mutate = vi.fn();
     swrMock = vi.fn((key: string) => {
-      const match = key.match(/context=([^&]+)/);
-      const ctx = match ? match[1] : 'personal';
+      const matchCtx = key.match(/context=([^&]+)/);
+      const ctx = matchCtx ? matchCtx[1] : 'personal';
+      const matchGroup = key.match(/groupId=([^&]+)/);
+      const gid = matchGroup ? matchGroup[1] : undefined;
       return {
         data:
-          ctx === 'team-a'
+          ctx === 'group' && gid === 'team-a'
             ? [{ category: 'Office Rent', amount: 2000, costOfDeviation: 1000 }]
             : [{ category: 'Rent', amount: 1000, costOfDeviation: 0 }],
         mutate,
@@ -143,7 +146,7 @@ describe('FinancePage', () => {
     });
     const { container } = render(<FinancePage />);
     expect(container.textContent).toContain('Rent');
-    document.cookie = 'context=team-a';
+    document.cookie = 'context=group; groupId=team-a';
     act(() => {
       window.dispatchEvent(new Event('context-changed'));
     });

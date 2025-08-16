@@ -38,7 +38,7 @@ describe('finance report auth', () => {
     })
     const mod: any = await import(path)
     const res = await mod.GET(
-      new Request('http://test', { headers: { cookie: 'context=team-a' } }),
+      new Request('http://test', { headers: { cookie: 'context=group; groupId=team-a' } }),
       params,
     )
     expect(res.status).toBe(403)

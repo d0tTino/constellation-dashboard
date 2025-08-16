@@ -7,9 +7,6 @@ export function getContextAndGroupId(req: Request): { context: AppContext; group
   const cookie = req.headers.get('cookie') || ''
   const matchGroup = cookie.match(/(?:^|; )groupId=([^;]+)/)
   const fromGroup = matchGroup ? decodeURIComponent(matchGroup[1]) : undefined
-  const matchCtx = cookie.match(/(?:^|; )context=([^;]+)/)
-  const ctxVal = matchCtx ? decodeURIComponent(matchCtx[1]) : undefined
-  const fromContext = ctxVal && ctxVal !== 'personal' && ctxVal !== 'group' ? ctxVal : undefined
-  const groupId = param ?? fromGroup ?? fromContext
+  const groupId = param ?? fromGroup
   return { context, groupId }
 }

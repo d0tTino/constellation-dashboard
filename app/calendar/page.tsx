@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import useSWR from 'swr'
 import { fetcher } from '../../lib/swr'
 import { AppContext } from '../../lib/context'
+import { getClientContext } from '../../lib/client-context'
 import ScheduleCalendar from '../components/ScheduleCalendar'
 import CalendarLayerPanel from '../components/CalendarLayerPanel'
 import { useSocket } from '../socket-context'
@@ -32,11 +33,7 @@ interface CalendarData {
   layers: Layer[]
 }
 
-const getContext = (): AppContext => {
-  const match = document.cookie.match(/(?:^|; )context=([^;]+)/)
-  const value = match ? decodeURIComponent(match[1]) : 'personal'
-  return value === 'personal' ? 'personal' : 'group'
-}
+const getContext = (): AppContext => getClientContext().context
 
 export default function CalendarPage() {
   const [context, setContext] = useState<AppContext>(getContext())
@@ -68,7 +65,7 @@ export default function CalendarPage() {
 
   useEffect(() => {
     const handleContextChange = () => {
-      const current = getContext()
+      const { context: current } = getClientContext()
       setContext(current)
       mutate()
     }
@@ -81,8 +78,7 @@ export default function CalendarPage() {
   const handleNL = (e: React.FormEvent) => {
     e.preventDefault()
     if (!nl) return
-    const match = document.cookie.match(/(?:^|; )context=([^;]+)/)
-    const context = match ? (match[1] === 'personal' ? 'personal' : 'group') : 'personal'
+    const { context } = getClientContext()
     socket?.send(
       JSON.stringify({
         type: 'calendar.nl.request',

@@ -26,7 +26,7 @@ describe('budget history API route', () => {
     ])
 
     const resGroup = await GET(
-      new Request('http://test', { headers: { cookie: 'context=team-a' } }),
+      new Request('http://test', { headers: { cookie: 'context=group; groupId=team-a' } }),
     )
     const dataGroup = await resGroup.json()
     expect(dataGroup).toEqual([
