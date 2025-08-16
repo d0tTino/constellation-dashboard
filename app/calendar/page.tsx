@@ -7,7 +7,7 @@ import { AppContext } from '../../lib/context'
 import { getClientContext } from '../../lib/client-context'
 import ScheduleCalendar from '../components/ScheduleCalendar'
 import CalendarLayerPanel from '../components/CalendarLayerPanel'
-import { useSocket } from '../socket-context'
+import { useSocket, useCalendarEvents } from '../socket-context'
 import { useSession } from 'next-auth/react'
 
 interface Layer {
@@ -53,6 +53,7 @@ export default function CalendarPage() {
   const [layer, setLayer] = useState('')
 
   const socket = useSocket()
+  const calendarEvent = useCalendarEvents()
   const { data: session } = useSession()
   const [nl, setNl] = useState('')
 
@@ -62,6 +63,12 @@ export default function CalendarPage() {
       setLayer(prev => (prev && data.layers.some(l => l.id === prev) ? prev : data.layers[0].id))
     }
   }, [data.layers])
+
+  useEffect(() => {
+    if (calendarEvent?.type === 'calendar.event.deleted') {
+      mutate()
+    }
+  }, [calendarEvent, mutate])
 
   useEffect(() => {
     const handleContextChange = () => {
