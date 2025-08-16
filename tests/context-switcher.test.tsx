@@ -23,13 +23,14 @@ describe('ContextSwitcher', () => {
   beforeEach(() => {
     document.body.innerHTML = ''
     document.cookie = 'context=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/'
+    document.cookie = 'groupId=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/'
     vi.unstubAllGlobals()
     vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true)
     sessionMock = { data: { user: { id: '1' }, groups: ['team-a', 'team-b'] } }
   })
 
   it('uses initial context from cookie', async () => {
-    document.cookie = 'context=team-b'
+    document.cookie = 'context=group; groupId=team-b'
     const fetchMock = vi.fn()
     global.fetch = fetchMock as any
     render(<ContextSwitcher />)
@@ -68,7 +69,7 @@ describe('ContextSwitcher', () => {
   })
 
   it('updates cookie on selection change', async () => {
-    document.cookie = 'context=team-a'
+    document.cookie = 'context=group; groupId=team-a'
     render(<ContextSwitcher />)
     await act(async () => {})
     const select = document.querySelector('select') as HTMLSelectElement
@@ -76,7 +77,8 @@ describe('ContextSwitcher', () => {
       select.value = 'team-b'
       select.dispatchEvent(new Event('change', { bubbles: true }))
     })
-    expect(document.cookie).toContain('context=team-b')
+    expect(document.cookie).toContain('context=group')
+    expect(document.cookie).toContain('groupId=team-b')
     expect(select.value).toBe('team-b')
   })
 })

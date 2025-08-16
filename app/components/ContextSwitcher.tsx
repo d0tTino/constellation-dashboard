@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
+import { getClientContext } from '../../lib/client-context'
 
 type ContextType = string
 
@@ -11,9 +12,9 @@ export default function ContextSwitcher() {
   const [groups, setGroups] = useState<string[]>([])
 
   useEffect(() => {
-    const match = document.cookie.match(/(?:^|; )context=([^;]+)/)
-    if (match) {
-      setContext(match[1])
+    const { context, groupId } = getClientContext()
+    if (context === 'group' && groupId) {
+      setContext(groupId)
     }
   }, [])
 
@@ -38,7 +39,13 @@ export default function ContextSwitcher() {
 
   const update = (value: ContextType) => {
     setContext(value)
-    document.cookie = `context=${value}; path=/`
+    if (value === 'personal') {
+      document.cookie = `context=personal; path=/`
+      document.cookie = `groupId=; Max-Age=0; path=/`
+    } else {
+      document.cookie = `context=group; path=/`
+      document.cookie = `groupId=${value}; path=/`
+    }
     window.dispatchEvent(new Event('context-changed'))
   }
 

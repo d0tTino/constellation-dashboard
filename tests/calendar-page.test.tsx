@@ -49,6 +49,7 @@ describe('CalendarPage', () => {
     vi.unstubAllGlobals();
     socketMock = { send: vi.fn() };
     document.cookie = 'context=personal';
+    document.cookie = 'groupId=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
   });
 
   it('configures multiple calendar views', () => {
@@ -138,7 +139,7 @@ describe('CalendarPage', () => {
   });
 
   it('sends NL command with group context', async () => {
-    document.cookie = 'context=team-a';
+    document.cookie = 'context=group; groupId=team-a';
     const mutate = vi.fn();
     swrMock = vi.fn(() => ({ data: { events: [], layers: [] }, mutate }));
 
@@ -368,7 +369,7 @@ describe('CalendarPage', () => {
       expect.objectContaining({ refreshInterval: 30000 }),
     );
 
-    document.cookie = 'context=team-a';
+    document.cookie = 'context=group; groupId=team-a';
     await act(async () => {
       vi.advanceTimersByTime(1000);
     });
