@@ -19,8 +19,8 @@ export default function ContextSwitcher() {
 
   useEffect(() => {
     async function loadGroups() {
-      if (session?.user?.groups && session.user.groups.length) {
-        setGroups(session.user.groups)
+      if (session?.groups && session.groups.length) {
+        setGroups(session.groups)
         return
       }
       try {

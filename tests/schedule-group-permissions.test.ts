@@ -43,7 +43,8 @@ describe('schedule group permissions', () => {
     } = await loadModules()
 
     vi.mocked(getServerSession).mockResolvedValue({
-      user: { id: '1', groups: ['team-a'] },
+      user: { id: '1' },
+      groups: ['team-a'],
     })
     const badRes = await GET(
       new Request('http://test', {
@@ -71,7 +72,8 @@ describe('schedule group permissions', () => {
     } = await loadModules()
 
     vi.mocked(getServerSession).mockResolvedValue({
-      user: { id: '1', groups: ['team-a'] },
+      user: { id: '1' },
+      groups: ['team-a'],
     })
     const badReq = new Request('http://test', {
       method: 'POST',
@@ -131,7 +133,8 @@ describe('schedule group permissions', () => {
     } = await loadModules()
 
     vi.mocked(getServerSession).mockResolvedValue({
-      user: { id: '1', groups: ['team-b'] },
+      user: { id: '1' },
+      groups: ['team-b'],
     })
     const badReq = new Request('http://test', {
       method: 'PATCH',
@@ -145,7 +148,8 @@ describe('schedule group permissions', () => {
     expect(badRes.status).toBe(403)
 
     vi.mocked(getServerSession).mockResolvedValue({
-      user: { id: '1', groups: ['team-a'] },
+      user: { id: '1' },
+      groups: ['team-a'],
     })
     const okReq = new Request('http://test', {
       method: 'PATCH',

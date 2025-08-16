@@ -22,7 +22,7 @@ export async function GET(
     if (!requested) {
       return new Response('groupId required', { status: 400 })
     }
-    const groups = session.user?.groups ?? []
+    const groups = session.groups ?? []
     if (!event.shared || !groupId || groupId !== requested || !groups.includes(groupId)) {
       return new Response('Forbidden', { status: 403 })
     }
@@ -50,7 +50,7 @@ export async function PATCH(
     if (!requested) {
       return new Response('groupId required', { status: 400 })
     }
-    const groups = session.user?.groups ?? []
+    const groups = session.groups ?? []
     if (!existing.shared || !groupId || groupId !== requested || !groups.includes(groupId)) {
       return new Response('Forbidden', { status: 403 })
     }

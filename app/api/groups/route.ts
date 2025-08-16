@@ -6,6 +6,6 @@ export async function GET() {
   if (!session) {
     return new Response('Unauthorized', { status: 401 })
   }
-  const groups = session.user?.groups ?? []
+  const groups = session.groups ?? []
   return Response.json({ groups })
 }

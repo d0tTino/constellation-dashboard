@@ -25,15 +25,18 @@ describe('ContextSwitcher', () => {
     document.cookie = 'context=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/'
     vi.unstubAllGlobals()
     vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true)
-    sessionMock = { data: { user: { id: '1', groups: ['team-a', 'team-b'] } } }
+    sessionMock = { data: { user: { id: '1' }, groups: ['team-a', 'team-b'] } }
   })
 
   it('uses initial context from cookie', async () => {
     document.cookie = 'context=team-b'
+    const fetchMock = vi.fn()
+    global.fetch = fetchMock as any
     render(<ContextSwitcher />)
     await act(async () => {})
     const select = document.querySelector('select') as HTMLSelectElement
     expect(select.value).toBe('team-b')
+    expect(fetchMock).not.toHaveBeenCalled()
   })
 
   it('populates group options from API', async () => {

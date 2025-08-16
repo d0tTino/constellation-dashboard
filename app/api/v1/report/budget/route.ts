@@ -10,7 +10,7 @@ export async function GET(req: Request) {
   }
   const { context: ctx, groupId } = getContextAndGroupId(req)
   if (ctx === 'group') {
-    const groups = session.user?.groups ?? []
+    const groups = session.groups ?? []
     if (!groupId || !groups.includes(groupId)) {
       return Response.json({ error: 'Forbidden' }, { status: 403 })
     }

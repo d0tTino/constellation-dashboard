@@ -123,7 +123,8 @@ describe('schedule API routes', () => {
     )
 
     vi.mocked(getServerSession).mockResolvedValue({
-      user: { id: '1', groups: ['team-a'] },
+      user: { id: '1' },
+      groups: ['team-a'],
     })
     const {
       schedule: { GET, POST },
@@ -188,7 +189,8 @@ describe('schedule API routes', () => {
     }
 
     vi.mocked(getServerSession).mockResolvedValue({
-      user: { id: '1', groups: ['team-a'] },
+      user: { id: '1' },
+      groups: ['team-a'],
     })
     const postReq = new Request('http://test', {
       method: 'POST',
@@ -198,7 +200,8 @@ describe('schedule API routes', () => {
     await POST(postReq)
 
     vi.mocked(getServerSession).mockResolvedValue({
-      user: { id: '1', groups: ['team-a'] },
+      user: { id: '1' },
+      groups: ['team-a'],
     })
     const getRes = await GET(
       new Request('http://test', { headers: { cookie: 'context=team-a' } }),
@@ -209,7 +212,8 @@ describe('schedule API routes', () => {
     expect(data.groupId).toBe('team-a')
 
     vi.mocked(getServerSession).mockResolvedValue({
-      user: { id: '1', groups: ['team-a'] },
+      user: { id: '1' },
+      groups: ['team-a'],
     })
     const badGet = await GET(
       new Request('http://test', { headers: { cookie: 'context=team-b' } }),
@@ -218,7 +222,8 @@ describe('schedule API routes', () => {
     expect(badGet.status).toBe(403)
 
     vi.mocked(getServerSession).mockResolvedValue({
-      user: { id: '2', groups: ['team-b'] },
+      user: { id: '2' },
+      groups: ['team-b'],
     })
     const patchReq = new Request('http://test', {
       method: 'PATCH',
@@ -233,7 +238,8 @@ describe('schedule API routes', () => {
 describe('budget report API route', () => {
   it('returns personal and group budget data based on context', async () => {
     vi.mocked(getServerSession).mockResolvedValue({
-      user: { id: '1', groups: ['team-a'] },
+      user: { id: '1' },
+      groups: ['team-a'],
     })
     const { GET } = await import('../app/api/v1/report/budget/route')
     const resPersonal = await GET(
