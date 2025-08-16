@@ -28,12 +28,24 @@ export const authOptions: NextAuthOptions = {
     strategy: 'jwt',
   },
   callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.groups = ['team-a', 'team-b']
+      }
+      if (!token.groups) {
+        token.groups = []
+      }
+      return token
+    },
     async session({ session, token }) {
       if (session.user && token.sub) {
         session.user.id = token.sub as string
       }
       if (token.accessToken) {
         ;(session as any).accessToken = token.accessToken as string
+      }
+      if ((token as any).groups) {
+        ;(session as any).groups = (token as any).groups as string[]
       }
       return session
     },

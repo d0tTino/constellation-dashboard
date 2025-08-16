@@ -14,7 +14,7 @@ export async function GET(req: Request) {
     if (!groupId) {
       return new Response('groupId required', { status: 400 })
     }
-    const groups = session.user?.groups ?? []
+    const groups = session.groups ?? []
     if (!groups.includes(groupId)) {
       return new Response('Forbidden', { status: 403 })
     }
@@ -36,7 +36,7 @@ export async function POST(req: Request) {
     if (!groupId) {
       return Response.json({ error: 'groupId required' }, { status: 400 })
     }
-    const groups = session.user?.groups ?? []
+    const groups = session.groups ?? []
     if (!groups.includes(groupId)) {
       return new Response('Forbidden', { status: 403 })
     }

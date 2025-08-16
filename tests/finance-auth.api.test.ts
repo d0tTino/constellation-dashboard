@@ -32,7 +32,10 @@ describe('finance report auth', () => {
   })
 
   it.each(routes)('returns 403 for unauthorized group access on %s', async (path, params) => {
-    vi.mocked(getServerSession).mockResolvedValue({ user: { id: '1', groups: [] } })
+    vi.mocked(getServerSession).mockResolvedValue({
+      user: { id: '1' },
+      groups: [],
+    })
     const mod: any = await import(path)
     const res = await mod.GET(
       new Request('http://test', { headers: { cookie: 'context=team-a' } }),

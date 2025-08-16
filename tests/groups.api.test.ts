@@ -11,7 +11,10 @@ vi.mock('next-auth', async () => {
 
 describe('groups API route', () => {
   it('returns groups from session', async () => {
-    vi.mocked(getServerSession).mockResolvedValue({ user: { id: '1', groups: ['Team A'] } })
+    vi.mocked(getServerSession).mockResolvedValue({
+      user: { id: '1' },
+      groups: ['Team A'],
+    })
     const { GET } = await import('../app/api/groups/route')
     const res = await GET()
     const data = await res.json()
