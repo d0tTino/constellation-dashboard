@@ -131,7 +131,7 @@ export default function FinancePage() {
                 )}
               </div>
               <p>Amount: ${option.amount}</p>
-              {!isBest && <p>Cost of deviation: ${option.costOfDeviation}</p>}
+              <p>Cost of deviation: ${isBest ? 0 : option.costOfDeviation}</p>
               <button
                 className="mt-2 text-blue-500 underline"
                 onClick={() => {

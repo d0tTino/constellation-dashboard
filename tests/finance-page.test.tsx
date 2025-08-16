@@ -51,7 +51,9 @@ describe('FinancePage', () => {
     expect(cards[1].className).not.toContain('border-green-500');
     expect(cards[0].textContent).toContain('Best');
     expect(cards[0].textContent).toContain('⭐');
-    expect(cards[0].textContent).not.toContain('Cost of deviation');
+    expect(cards[0].textContent).toContain('Cost of deviation: $0');
+    const costInfoBest = cards[0].querySelector('p:nth-of-type(2)') as HTMLParagraphElement;
+    expect(costInfoBest.textContent).toBe('Cost of deviation: $0');
     const costInfo = cards[1].querySelector('p:nth-of-type(2)') as HTMLParagraphElement;
     expect(costInfo.textContent).toMatch(/Cost of deviation:/);
     const viewBtn = cards[0].querySelector('button') as HTMLButtonElement;
