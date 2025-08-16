@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { SessionProvider, signOut, useSession } from 'next-auth/react';
 import { ThemeProvider, useTheme } from './theme-context';
 import ContextSwitcher from './components/ContextSwitcher';
+import ConnectionStatus from './components/ConnectionStatus';
 
 export const metadata = {
   title: 'Constellation Dashboard',
@@ -63,6 +64,7 @@ export function ShellContent({
           <ContextSwitcher />
           <button type="button" onClick={toggleTheme}>Toggle Theme</button>
         </nav>
+        <ConnectionStatus />
         {children}
       </body>
 

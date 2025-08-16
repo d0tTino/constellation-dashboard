@@ -12,6 +12,7 @@ vi.mock('../app/socket-context', () => ({
   useFinanceUpdates: () => financeUpdate,
   useTaskStatus: () => null,
   useSocket: () => ({ send }),
+  useSocketStatus: () => ({ connectionState: 'open', lastError: null, retry: () => {} }),
 }));
 
 import FinancePage from '../app/finance/page';

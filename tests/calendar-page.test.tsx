@@ -24,6 +24,7 @@ vi.mock('../app/socket-context', () => ({
   useCalendarEvents: () => null,
   useFinanceUpdates: () => null,
   useTaskStatus: () => null,
+  useSocketStatus: () => ({ connectionState: 'open', lastError: null, retry: () => {} }),
 }));
 vi.mock('next-auth/react', () => ({
   useSession: () => ({ data: { user: { id: 'user1' } } })

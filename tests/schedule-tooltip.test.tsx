@@ -8,6 +8,7 @@ vi.mock('../app/socket-context', () => ({
   __esModule: true,
   useCalendarEvents: () => null,
   useTaskStatus: () => null,
+  useSocketStatus: () => ({ connectionState: 'open', lastError: null, retry: () => {} }),
 }))
 
 let eventContent: any

@@ -1,5 +1,5 @@
 'use client';
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { signIn, useSession } from 'next-auth/react';
 import {
   TaskStatusEvent,
@@ -11,6 +11,9 @@ interface SocketContextValue {
   calendarEvent: any;
   financeUpdate: any;
   taskStatus: TaskStatusEvent | null;
+  connectionState: 'connecting' | 'open' | 'error';
+  lastError: { code: number; message: string } | null;
+  retry: () => void;
 }
 
 const SocketContext = createContext<SocketContextValue>({
@@ -18,6 +21,9 @@ const SocketContext = createContext<SocketContextValue>({
   calendarEvent: null,
   financeUpdate: null,
   taskStatus: null,
+  connectionState: 'connecting',
+  lastError: null,
+  retry: () => {},
 });
 
 export function useSocket() {
@@ -36,13 +42,21 @@ export function useTaskStatus() {
   return useContext(SocketContext).taskStatus;
 }
 
+export function useSocketStatus() {
+  const { connectionState, lastError, retry } = useContext(SocketContext);
+  return { connectionState, lastError, retry };
+}
+
 export function SocketProvider({ children }: { children: React.ReactNode }) {
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [calendarEvent, setCalendarEvent] = useState<any>(null);
   const [financeUpdate, setFinanceUpdate] = useState<any>(null);
+  const [connectionState, setConnectionState] = useState<'connecting' | 'open' | 'error'>('connecting');
+  const [lastError, setLastError] = useState<{ code: number; message: string } | null>(null);
   const taskStatus = useTaskStatusSubscription();
   const { data: session } = useSession();
   const accessToken = (session as any)?.accessToken as string | undefined;
+  const connectRef = useRef<() => void>(() => {});
 
   useEffect(() => {
     if (typeof window === 'undefined' || !accessToken) return;
@@ -53,16 +67,21 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     let timeout: ReturnType<typeof setTimeout> | undefined;
 
     const connect = () => {
+      setConnectionState('connecting');
+      setLastError(null);
       const url = `${baseUrl}?token=${encodeURIComponent(accessToken)}`;
       ws = new WebSocket(url);
       setSocket(ws);
 
       ws.onopen = () => {
         reconnectAttempts = 0;
+        setConnectionState('open');
       };
 
       ws.onerror = (event) => {
         console.error('WebSocket error:', event);
+        setConnectionState('error');
+        setLastError({ code: 0, message: 'WebSocket error' });
       };
 
       ws.onmessage = (event) => {
@@ -93,10 +112,18 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
           signIn();
           return;
         }
+        setConnectionState('error');
+        setLastError({ code: event.code, message: event.reason });
         const delay = Math.min(10000, 1000 * 2 ** reconnectAttempts);
         reconnectAttempts += 1;
         timeout = setTimeout(connect, delay);
       };
+    };
+
+    connectRef.current = () => {
+      if (timeout) clearTimeout(timeout);
+      reconnectAttempts = 0;
+      connect();
     };
 
     connect();
@@ -108,7 +135,17 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
   }, [accessToken]);
 
   return (
-    <SocketContext.Provider value={{ socket, calendarEvent, financeUpdate, taskStatus }}>
+    <SocketContext.Provider
+      value={{
+        socket,
+        calendarEvent,
+        financeUpdate,
+        taskStatus,
+        connectionState,
+        lastError,
+        retry: connectRef.current,
+      }}
+    >
       {children}
     </SocketContext.Provider>
   );
