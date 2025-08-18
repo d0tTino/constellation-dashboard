@@ -20,18 +20,19 @@ export default function SharedEventTooltip({ children, invitees = [], permission
       onFocus={() => setVisible(true)}
       onBlur={() => setVisible(false)}
       tabIndex={0}
-      aria-describedby={visible ? tooltipId : undefined}
+      aria-describedby={tooltipId}
     >
       {children}
-      {visible && (
-        <div
-          id={tooltipId}
-          role="tooltip"
-          className="absolute z-10 p-2 text-xs text-white bg-gray-800 rounded shadow whitespace-pre-line"
-        >
-          {content}
-        </div>
-      )}
+      <div
+        id={tooltipId}
+        role="tooltip"
+        className={[
+          'absolute z-10 p-2 text-xs text-white bg-gray-800 rounded shadow whitespace-pre-line',
+          visible ? '' : 'hidden',
+        ].join(' ')}
+      >
+        {content}
+      </div>
     </div>
   )
 }

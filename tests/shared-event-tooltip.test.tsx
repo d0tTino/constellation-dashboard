@@ -26,11 +26,12 @@ describe('SharedEventTooltip', () => {
       </SharedEventTooltip>
     )
     const trigger = document.querySelector('div[tabindex="0"]') as HTMLElement
+    const tooltip = document.querySelector('[role="tooltip"]') as HTMLElement
+    expect(tooltip.classList.contains('hidden')).toBe(true)
     act(() => {
       trigger.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }))
     })
-    const tooltip = document.querySelector('[role="tooltip"]') as HTMLElement
-    expect(tooltip).toBeTruthy()
+    expect(tooltip.classList.contains('hidden')).toBe(false)
     expect(tooltip.textContent).toContain('Invitees: Alice, Bob')
     expect(tooltip.textContent).toContain('Permissions: view, edit')
     expect(trigger.getAttribute('aria-describedby')).toBe(tooltip.id)
@@ -43,18 +44,17 @@ describe('SharedEventTooltip', () => {
       </SharedEventTooltip>
     )
     const trigger = document.querySelector('div[tabindex="0"]') as HTMLElement
+    const tooltip = document.querySelector('[role="tooltip"]') as HTMLElement
+    expect(tooltip.classList.contains('hidden')).toBe(true)
+    expect(trigger.getAttribute('aria-describedby')).toBe(tooltip.id)
     act(() => {
       trigger.focus()
     })
-    let tooltip = document.querySelector('[role="tooltip"]') as HTMLElement | null
-    expect(tooltip).toBeTruthy()
-    expect(trigger.getAttribute('aria-describedby')).toBe(tooltip!.id)
+    expect(tooltip.classList.contains('hidden')).toBe(false)
     act(() => {
       trigger.blur()
     })
-    tooltip = document.querySelector('[role="tooltip"]')
-    expect(tooltip).toBeNull()
-    expect(trigger.hasAttribute('aria-describedby')).toBe(false)
+    expect(tooltip.classList.contains('hidden')).toBe(true)
   })
 })
 
