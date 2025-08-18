@@ -216,6 +216,7 @@ export default function ScheduleCalendar({ events, layers, visibleLayers, mutate
                 {e.owner && <span className="mr-1">{e.owner.slice(0, 2).toUpperCase()}</span>}
                 {e.title || '(no title)'}
                 <button
+                  type="button"
                   className="ml-2 underline"
                   onClick={() => handleDelete(e.id)}
                   aria-label={`Delete ${e.title || 'event'}`}
