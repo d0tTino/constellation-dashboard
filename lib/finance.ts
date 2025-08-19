@@ -7,8 +7,15 @@ export type BudgetOption = {
 export type RankedBudgetOption = BudgetOption & { rank: number }
 
 export function rankBudgetOptions(options: BudgetOption[]): RankedBudgetOption[] {
-  return options
+  const sorted = options
     .slice()
     .sort((a, b) => a.costOfDeviation - b.costOfDeviation)
-    .map((option, idx) => ({ ...option, rank: idx + 1 }))
+
+  const baseCost = sorted.length ? sorted[0].costOfDeviation : 0
+
+  return sorted.map((option, idx) => ({
+    ...option,
+    costOfDeviation: option.costOfDeviation - baseCost,
+    rank: idx + 1,
+  }))
 }

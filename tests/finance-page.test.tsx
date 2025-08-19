@@ -33,14 +33,15 @@ describe('FinancePage', () => {
     send = vi.fn();
     financeUpdate = null;
     document.cookie = 'groupId=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+    document.cookie = 'context=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
   });
 
   it('labels options, highlights best choice, and shows modal content', () => {
     const mutate = vi.fn();
     swrMock = vi.fn(() => ({
       data: [
-        { category: 'Rent', amount: 1000, costOfDeviation: 0 },
-        { category: 'Food', amount: 500, costOfDeviation: 100 },
+        { category: 'Rent', amount: 960, costOfDeviation: 0 },
+        { category: 'Food', amount: 910, costOfDeviation: 0 },
       ],
       mutate,
     }));
@@ -57,7 +58,7 @@ describe('FinancePage', () => {
     const costInfoBest = cards[0].querySelector('p:nth-of-type(2)') as HTMLParagraphElement;
     expect(costInfoBest.textContent).toBe('Cost of deviation: $0');
     const costInfo = cards[1].querySelector('p:nth-of-type(2)') as HTMLParagraphElement;
-    expect(costInfo.textContent).toMatch(/Cost of deviation:/);
+    expect(costInfo.textContent).toBe('Cost of deviation: $50');
     const viewBtn = cards[0].querySelector('button') as HTMLButtonElement;
     act(() => { viewBtn.click(); });
     expect(send).toHaveBeenCalledWith(
@@ -132,7 +133,7 @@ describe('FinancePage', () => {
   });
 
   it('loads new data when the context cookie changes', () => {
-    document.cookie = 'context=personal';
+    document.cookie = 'context=personal; path=/';
     const mutate = vi.fn();
     swrMock = vi.fn((key: string) => {
       const matchCtx = key.match(/context=([^&]+)/);
@@ -149,8 +150,9 @@ describe('FinancePage', () => {
     });
     const { container } = render(<FinancePage />);
     expect(container.textContent).toContain('Rent');
-    document.cookie = 'context=group';
-    document.cookie = 'groupId=team-a';
+    document.cookie = 'context=group; path=/';
+    document.cookie = 'groupId=team-a; path=/';
+
     act(() => {
       window.dispatchEvent(new Event('context-changed'));
     });
