@@ -2,17 +2,23 @@
 import React from 'react';
 import { useSocketStatus } from '../socket-context';
 
+export function getConnectionStatusMessage(
+  connectionState: string,
+  lastError?: { code: string | number; message: string } | null
+) {
+  return connectionState === 'connecting'
+    ? 'Connecting...'
+    : `Connection error${
+        lastError ? ` (${lastError.code}: ${lastError.message})` : ''
+      }`;
+}
+
 export default function ConnectionStatus() {
   const { connectionState, lastError, retry } = useSocketStatus();
 
   if (connectionState === 'open') return null;
 
-  const message =
-    connectionState === 'connecting'
-      ? 'Connecting...'
-      : `Connection error${
-          lastError ? ` (${lastError.code}: ${lastError.message})` : ''
-        }`;
+  const message = getConnectionStatusMessage(connectionState, lastError);
 
   return (
     <div
