@@ -30,7 +30,8 @@ describe('ContextSwitcher', () => {
   })
 
   it('uses initial context from cookie', async () => {
-    document.cookie = 'context=group; groupId=team-b'
+    document.cookie = 'context=group'
+    document.cookie = 'groupId=team-b'
     const fetchMock = vi.fn()
     global.fetch = fetchMock as any
     render(<ContextSwitcher />)
@@ -69,7 +70,8 @@ describe('ContextSwitcher', () => {
   })
 
   it('updates cookie on selection change', async () => {
-    document.cookie = 'context=group; groupId=team-a'
+    document.cookie = 'context=group'
+    document.cookie = 'groupId=team-a'
     render(<ContextSwitcher />)
     await act(async () => {})
     const select = document.querySelector('select') as HTMLSelectElement
