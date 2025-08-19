@@ -149,7 +149,8 @@ describe('FinancePage', () => {
     });
     const { container } = render(<FinancePage />);
     expect(container.textContent).toContain('Rent');
-    document.cookie = 'context=group; groupId=team-a';
+    document.cookie = 'context=group';
+    document.cookie = 'groupId=team-a';
     act(() => {
       window.dispatchEvent(new Event('context-changed'));
     });
