@@ -67,9 +67,6 @@ export default function FinancePage() {
   )
 
   const [selected, setSelected] = useState<typeof ranked[0] | null>(null)
-  const minCost = ranked.length
-    ? Math.min(...ranked.map((o) => o.costOfDeviation))
-    : Infinity
 
   return (
     <div className="p-4">
@@ -105,7 +102,7 @@ export default function FinancePage() {
       <div className="grid gap-4 md:grid-cols-2">
         {ranked.map((option, idx) => {
           const label = String.fromCharCode(65 + idx)
-          const isBest = option.costOfDeviation === minCost
+          const isBest = option.rank === 1
           return (
             <div
               key={option.category}
@@ -127,7 +124,7 @@ export default function FinancePage() {
                 )}
               </div>
               <p>Amount: ${option.amount}</p>
-              <p>Cost of deviation: ${isBest ? 0 : option.costOfDeviation}</p>
+              <p>Cost of deviation: ${option.costOfDeviation}</p>
               <button
                 className="mt-2 text-blue-500 underline"
                 onClick={() => {
