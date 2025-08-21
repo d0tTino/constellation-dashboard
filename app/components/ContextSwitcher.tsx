@@ -2,14 +2,22 @@
 
 import React, { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
+import useSWR from 'swr'
 import { getClientContext } from '../../lib/client-context'
+import { fetcher } from '../../lib/swr'
 
 type ContextType = string
 
 export default function ContextSwitcher() {
   const { data: session } = useSession()
   const [context, setContext] = useState<ContextType>('personal')
-  const [groups, setGroups] = useState<string[]>([])
+
+  const { data: groupsData } = useSWR<{ groups: string[] }>(
+    session ? '/api/groups' : null,
+    fetcher,
+    { fallbackData: { groups: session?.groups ?? [] } }
+  )
+  const groups = groupsData?.groups ?? []
 
   useEffect(() => {
     const { context, groupId } = getClientContext()
@@ -17,25 +25,6 @@ export default function ContextSwitcher() {
       setContext(groupId)
     }
   }, [])
-
-  useEffect(() => {
-    async function loadGroups() {
-      if (session?.groups && session.groups.length) {
-        setGroups(session.groups)
-        return
-      }
-      try {
-        const res = await fetch('/api/groups')
-        if (res.ok) {
-          const data = await res.json()
-          setGroups(Array.isArray(data.groups) ? data.groups : [])
-        }
-      } catch {
-        // ignore
-      }
-    }
-    loadGroups()
-  }, [session])
 
   const update = (value: ContextType) => {
     setContext(value)

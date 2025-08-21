@@ -2,6 +2,8 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { act } from 'react'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { SWRConfig } from 'swr'
+import { cache } from 'swr/_internal'
 import ContextSwitcher from '../app/components/ContextSwitcher'
 
 let sessionMock: any
@@ -26,19 +28,26 @@ describe('ContextSwitcher', () => {
     document.cookie = 'groupId=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/'
     vi.unstubAllGlobals()
     vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true)
+    cache.clear()
     sessionMock = { data: { user: { id: '1' }, groups: ['team-a', 'team-b'] } }
   })
 
   it('uses initial context from cookie', async () => {
     document.cookie = 'context=group'
     document.cookie = 'groupId=team-b'
-    const fetchMock = vi.fn()
-    global.fetch = fetchMock as any
-    render(<ContextSwitcher />)
+    global.fetch = vi.fn(() =>
+      Promise.resolve(
+        new Response(JSON.stringify({ groups: ['team-a', 'team-b'] }), { status: 200 })
+      )
+    ) as any
+    render(
+      <SWRConfig value={{ provider: () => new Map() }}>
+        <ContextSwitcher />
+      </SWRConfig>
+    )
     await act(async () => {})
     const select = document.querySelector('select') as HTMLSelectElement
     expect(select.value).toBe('team-b')
-    expect(fetchMock).not.toHaveBeenCalled()
   })
 
   it('populates group options from API', async () => {
@@ -49,7 +58,11 @@ describe('ContextSwitcher', () => {
       )
     )
     global.fetch = fetchMock as any
-    render(<ContextSwitcher />)
+    render(
+      <SWRConfig value={{ provider: () => new Map() }}>
+        <ContextSwitcher />
+      </SWRConfig>
+    )
     await act(async () => {})
     const options = Array.from(document.querySelectorAll('option')).map(
       o => (o as HTMLOptionElement).value
@@ -60,7 +73,11 @@ describe('ContextSwitcher', () => {
   })
 
   it('renders an associated label', async () => {
-    render(<ContextSwitcher />)
+    render(
+      <SWRConfig value={{ provider: () => new Map() }}>
+        <ContextSwitcher />
+      </SWRConfig>
+    )
     await act(async () => {})
     const label = document.querySelector('label')
     const select = document.querySelector('select') as HTMLSelectElement
@@ -72,7 +89,11 @@ describe('ContextSwitcher', () => {
   it('updates cookie on selection change', async () => {
     document.cookie = 'context=group'
     document.cookie = 'groupId=team-a'
-    render(<ContextSwitcher />)
+    render(
+      <SWRConfig value={{ provider: () => new Map() }}>
+        <ContextSwitcher />
+      </SWRConfig>
+    )
     await act(async () => {})
     const select = document.querySelector('select') as HTMLSelectElement
     act(() => {
@@ -82,5 +103,38 @@ describe('ContextSwitcher', () => {
     expect(document.cookie).toContain('context=group')
     expect(document.cookie).toContain('groupId=team-b')
     expect(select.value).toBe('team-b')
+  })
+
+  it('fetches groups once and reuses cache', async () => {
+    sessionMock = { data: { user: { id: '1' } } }
+    const fetchMock = vi.fn(() =>
+      Promise.resolve(
+        new Response(JSON.stringify({ groups: ['team-a'] }), { status: 200 })
+      )
+    )
+    global.fetch = fetchMock as any
+    const providerCache = new Map()
+    const config = {
+      provider: () => providerCache,
+      revalidateIfStale: false,
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+    }
+
+    render(
+      <SWRConfig value={config}>
+        <ContextSwitcher />
+      </SWRConfig>
+    )
+    await act(async () => {})
+    const initialCalls = fetchMock.mock.calls.length
+
+    render(
+      <SWRConfig value={config}>
+        <ContextSwitcher />
+      </SWRConfig>
+    )
+    await act(async () => {})
+    expect(fetchMock.mock.calls.length).toBe(initialCalls)
   })
 })
