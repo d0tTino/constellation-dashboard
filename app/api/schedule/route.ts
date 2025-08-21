@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '../auth/[...nextauth]/route'
 import { getContextAndGroupId } from '../../../lib/context-utils'
 import { sendWsMessage } from '../../../lib/ws-server'
+import { validateGroupPermissions } from '../../../lib/permissions'
 
 export async function GET(req: Request) {
   const session = await getServerSession(authOptions)
@@ -10,14 +11,9 @@ export async function GET(req: Request) {
     return new Response('Unauthorized', { status: 401 })
   }
   const { context: ctx, groupId } = getContextAndGroupId(req)
-  if (ctx === 'group') {
-    if (!groupId) {
-      return new Response('groupId required', { status: 400 })
-    }
-    const groups = session.groups ?? []
-    if (!groups.includes(groupId)) {
-      return new Response('Forbidden', { status: 403 })
-    }
+  const permError = validateGroupPermissions(session, ctx, groupId)
+  if (permError) {
+    return permError
   }
   const data = await getData()
   const events = data.events.filter(e =>
@@ -32,14 +28,9 @@ export async function POST(req: Request) {
     return new Response('Unauthorized', { status: 401 })
   }
   const { context: ctx, groupId } = getContextAndGroupId(req)
-  if (ctx === 'group') {
-    if (!groupId) {
-      return Response.json({ error: 'groupId required' }, { status: 400 })
-    }
-    const groups = session.groups ?? []
-    if (!groups.includes(groupId)) {
-      return new Response('Forbidden', { status: 403 })
-    }
+  const permError = validateGroupPermissions(session, ctx, groupId)
+  if (permError) {
+    return permError
   }
 
   let body: unknown

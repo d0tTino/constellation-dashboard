@@ -8,6 +8,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '../../auth/[...nextauth]/route'
 import { getContextAndGroupId } from '../../../../lib/context-utils'
 import { sendWsMessage } from '../../../../lib/ws-server'
+import { validateGroupPermissions } from '../../../../lib/permissions'
 
 export async function GET(
   req: Request,
@@ -22,19 +23,11 @@ export async function GET(
     return new Response('Not found', { status: 404 })
   }
   const { context: ctx, groupId: requested } = getContextAndGroupId(req)
-  const groupId = (event as any).groupId
-  if (ctx === 'group') {
-    if (!requested) {
-      return new Response('groupId required', { status: 400 })
-    }
-    const groups = session.groups ?? []
-    if (!event.shared || !groupId || groupId !== requested || !groups.includes(groupId)) {
-      return new Response('Forbidden', { status: 403 })
-    }
-  } else if (event.shared) {
-    return new Response('Forbidden', { status: 403 })
+  const permError = validateGroupPermissions(session, ctx, requested, event as any)
+  if (permError) {
+    return permError
   }
-  return Response.json({ ...event, groupId: groupId ?? null })
+  return Response.json({ ...event, groupId: (event as any).groupId ?? null })
 }
 
 export async function PATCH(
@@ -50,17 +43,9 @@ export async function PATCH(
     return new Response('Not found', { status: 404 })
   }
   const { context: ctx, groupId: requested } = getContextAndGroupId(req)
-  const groupId = (existing as any).groupId
-  if (ctx === 'group') {
-    if (!requested) {
-      return new Response('groupId required', { status: 400 })
-    }
-    const groups = session.groups ?? []
-    if (!existing.shared || !groupId || groupId !== requested || !groups.includes(groupId)) {
-      return new Response('Forbidden', { status: 403 })
-    }
-  } else if (existing.shared) {
-    return new Response('Forbidden', { status: 403 })
+  const permError = validateGroupPermissions(session, ctx, requested, existing as any)
+  if (permError) {
+    return permError
   }
   let body: unknown
   try {
@@ -95,17 +80,9 @@ export async function DELETE(
     return new Response('Not found', { status: 404 })
   }
   const { context: ctx, groupId: requested } = getContextAndGroupId(req)
-  const groupId = (existing as any).groupId
-  if (ctx === 'group') {
-    if (!requested) {
-      return new Response('groupId required', { status: 400 })
-    }
-    const groups = session.groups ?? []
-    if (!existing.shared || !groupId || groupId !== requested || !groups.includes(groupId)) {
-      return new Response('Forbidden', { status: 403 })
-    }
-  } else if (existing.shared) {
-    return new Response('Forbidden', { status: 403 })
+  const permError = validateGroupPermissions(session, ctx, requested, existing as any)
+  if (permError) {
+    return permError
   }
   await removeEvent(params.id)
   sendWsMessage(
