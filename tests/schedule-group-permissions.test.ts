@@ -3,6 +3,7 @@ import { promises as fs } from 'fs'
 import os from 'os'
 import path from 'path'
 import { getServerSession } from 'next-auth'
+import { validateGroupPermissions } from '../lib/permissions'
 
 vi.mock('next-auth', async () => {
   const actual = await vi.importActual<any>('next-auth')
@@ -26,6 +27,26 @@ describe('schedule group permissions', () => {
     await fs.unlink(file).catch(() => {})
     delete process.env.SCHEDULE_DATA_FILE
     vi.clearAllMocks()
+  })
+
+  it('validateGroupPermissions enforces membership and event access', () => {
+    const session = { groups: ['team-a'] }
+    const groupEvent = { shared: true, groupId: 'team-a' }
+
+    expect(validateGroupPermissions(session, 'group', 'team-b')?.status).toBe(403)
+    expect(validateGroupPermissions(session, 'group', 'team-a')).toBeUndefined()
+    expect(
+      validateGroupPermissions(session, 'group', 'team-a', groupEvent),
+    ).toBeUndefined()
+    expect(
+      validateGroupPermissions(session, 'group', 'team-a', {
+        shared: true,
+        groupId: 'team-b',
+      })?.status,
+    ).toBe(403)
+    expect(
+      validateGroupPermissions(session, 'personal', undefined, groupEvent)?.status,
+    ).toBe(403)
   })
 
   it('GET /api/schedule returns 403 for unauthorized groups and succeeds for authorized', async () => {
