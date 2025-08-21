@@ -8,8 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "NODE_OPTIONS=--max-old-space-size=8192 vitest run"
-
+    "test": "NODE_OPTIONS=--max-old-space-size=8192 vitest run",
+    "greet": "node bin/greet.js"
   },
   "keywords": [],
   "author": "",
@@ -40,5 +40,8 @@
     "tailwindcss": "^3.4.17",
     "typescript": "5.9.2",
     "vitest": "^3.2.4"
+  },
+  "bin": {
+    "greet": "./bin/greet.js"
   }
 }
