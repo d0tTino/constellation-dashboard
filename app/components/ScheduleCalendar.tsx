@@ -9,6 +9,7 @@ import { EventContentArg, EventMountArg } from '@fullcalendar/core'
 import { useCalendarEvents, useTaskStatus } from '../socket-context'
 import SharedEventTooltip from './SharedEventTooltip'
 import UserLegend from './UserLegend'
+import LayerLegend from './LayerLegend'
 
 interface Layer {
   id: string
@@ -27,6 +28,10 @@ interface Event {
   permissions?: string[]
   owner?: string
   userColorMap?: Record<string, string>
+  backgroundColor?: string
+  borderColor?: string
+  layerColor?: string
+  userColor?: string
 }
 
 interface ScheduleCalendarProps {
@@ -81,11 +86,14 @@ export default function ScheduleCalendar({ events, layers, visibleLayers, mutate
     .filter(e => !e.layer || visibleLayers.includes(e.layer))
     .map(e => {
       const layer = layers.find(l => l.id === e.layer)
-      const color = (e.owner && userColors[e.owner]) || layer?.color
+      const layerColor = layer?.color
+      const userColor = e.owner ? userColors[e.owner] : undefined
       return {
         ...e,
-        backgroundColor: color,
-        borderColor: color,
+        backgroundColor: layerColor,
+        borderColor: layerColor,
+        layerColor,
+        userColor,
         userColorMap: userColors
       }
     })
@@ -168,10 +176,10 @@ export default function ScheduleCalendar({ events, layers, visibleLayers, mutate
       icon.className = 'mr-1'
       info.el.prepend(icon)
     }
-    const color = info.event.backgroundColor || info.event.extendedProps.backgroundColor
-    if (color) {
-      info.el.style.backgroundColor = color
-      info.el.style.borderColor = color
+    const layerColor = info.event.extendedProps.layerColor || info.event.backgroundColor
+    if (layerColor) {
+      info.el.style.backgroundColor = layerColor
+      info.el.style.borderColor = layerColor
     }
   }
 
@@ -181,9 +189,13 @@ export default function ScheduleCalendar({ events, layers, visibleLayers, mutate
     const invitees: string[] = arg.event.extendedProps.invitees || []
     const permissions: string[] = arg.event.extendedProps.permissions || []
     const owner: string | undefined = arg.event.extendedProps.owner
+    const userColor: string | undefined = arg.event.extendedProps.userColor
     const initials = owner?.slice(0, 2).toUpperCase()
     const content = (
       <div className="flex items-center">
+        {userColor && (
+          <span className="w-2 h-2 rounded-full mr-1" style={{ backgroundColor: userColor }} />
+        )}
         {shared && <span className="mr-1">👥</span>}
         {initials && <span className="mr-1">{initials}</span>}
         <span>{arg.event.title}</span>
@@ -209,9 +221,13 @@ export default function ScheduleCalendar({ events, layers, visibleLayers, mutate
             {dayEvents.map(e => (
               <li key={e.id} className="flex items-center">
                 <span
-                  className="w-2 h-2 rounded-full mr-1"
-                  style={{ backgroundColor: e.backgroundColor, border: e.shared ? '1px solid black' : 'none' }}
-                />
+                  className="w-2 h-2 rounded-full mr-1 flex items-center justify-center"
+                  style={{ backgroundColor: e.layerColor, border: `1px solid ${e.layerColor}` }}
+                >
+                  {e.userColor && (
+                    <span className="w-1 h-1 rounded-full" style={{ backgroundColor: e.userColor }} />
+                  )}
+                </span>
                 {e.shared && <span className="mr-1">👥</span>}
                 {e.owner && <span className="mr-1">{e.owner.slice(0, 2).toUpperCase()}</span>}
                 {e.title || '(no title)'}
@@ -236,9 +252,13 @@ export default function ScheduleCalendar({ events, layers, visibleLayers, mutate
           {dayEvents.map(e => (
             <span
               key={e.id}
-              className="w-2 h-2 rounded-full"
-              style={{ backgroundColor: e.backgroundColor, border: e.shared ? '1px solid black' : 'none' }}
-            />
+              className="w-2 h-2 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: e.layerColor, border: `1px solid ${e.layerColor}` }}
+            >
+              {e.userColor && (
+                <span className="w-1 h-1 rounded-full" style={{ backgroundColor: e.userColor }} />
+              )}
+            </span>
           ))}
         </div>
       </div>
@@ -304,6 +324,7 @@ export default function ScheduleCalendar({ events, layers, visibleLayers, mutate
           </div>
         ))}
       </div>
+      <LayerLegend layers={layers} />
       <UserLegend userColors={userColors} />
     </div>
   )
