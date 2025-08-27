@@ -52,6 +52,18 @@ describe('CalendarPage', () => {
     document.cookie = 'groupId=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
   });
 
+  it('renders NL field with label and placeholder', () => {
+    const mutate = vi.fn();
+    swrMock = vi.fn(() => ({ data: { events: [], layers: [] }, mutate }));
+    const { container } = render(<CalendarPage />);
+
+    const label = container.querySelector('label[for="nl"]');
+    expect(label?.textContent).toBe('Describe your event');
+
+    const input = container.querySelector('input[name="nl"]') as HTMLInputElement;
+    expect(input.placeholder).toBe('Lunch with Mark tomorrow at noon');
+  });
+
   it('configures multiple calendar views', () => {
     const mutate = vi.fn();
     swrMock = vi.fn(() => ({ data: { events: [], layers: [] }, mutate }));

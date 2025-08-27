@@ -152,8 +152,13 @@ export default function CalendarPage() {
   return (
     <div>
       <form onSubmit={handleNL} className="mb-4">
+        <label htmlFor="nl" className="mr-2">
+          Describe your event
+        </label>
         <input
+          id="nl"
           name="nl"
+          placeholder="Lunch with Mark tomorrow at noon"
           value={nl}
           onChange={e => setNl(e.target.value)}
           className="border mr-2"
