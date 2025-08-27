@@ -1,8 +1,9 @@
 'use client'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import useSWR from 'swr'
 import { fetcher } from '../../lib/swr'
 import { useFinanceUpdates } from '../socket-context'
+import { getClientContext } from '../../lib/client-context'
 
 type HistoryItem = {
   id: string
@@ -13,8 +14,9 @@ type HistoryItem = {
 type Action = { id: string; description: string }
 
 export default function FinanceHistoryPage() {
+  const [{ context, groupId }, setCtx] = useState(() => getClientContext())
   const { data, mutate } = useSWR<HistoryItem[]>(
-    '/api/v1/report/budget/history',
+    `/api/v1/report/budget/history?context=${context}&groupId=${groupId ?? ''}`,
     fetcher,
     { refreshInterval: 30000 },
   )
@@ -22,6 +24,23 @@ export default function FinanceHistoryPage() {
   useEffect(() => {
     if (update) mutate()
   }, [update, mutate])
+  useEffect(() => {
+    const handleContextChange = () => {
+      setCtx(getClientContext())
+    }
+    window.addEventListener('context-changed', handleContextChange)
+    return () => {
+      window.removeEventListener('context-changed', handleContextChange)
+    }
+  }, [])
+  const initialRender = useRef(true)
+  useEffect(() => {
+    if (initialRender.current) {
+      initialRender.current = false
+      return
+    }
+    mutate()
+  }, [context, groupId, mutate])
   const history = data ?? []
 
   const [selected, setSelected] = useState<HistoryItem | null>(null)

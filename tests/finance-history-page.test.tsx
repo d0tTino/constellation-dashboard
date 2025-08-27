@@ -27,6 +27,8 @@ function render(ui: React.ReactElement) {
 describe('FinanceHistoryPage', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
+    document.cookie = 'groupId=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+    document.cookie = 'context=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
   });
 
   it('lists past analyses', () => {
@@ -37,8 +39,9 @@ describe('FinanceHistoryPage', () => {
   });
 
   it('shows actions for a selected history item and returns back', () => {
-    swrMock = vi.fn((key: string) => {
-      if (key === '/api/v1/report/budget/history') {
+    swrMock = vi.fn((key: string | null) => {
+      if (!key) return {};
+      if (key.startsWith('/api/v1/report/budget/history?')) {
         return { data: [{ id: '1', date: '2024-01-01', totalCost: 123 }], mutate: vi.fn() };
       }
       if (key === '/api/v1/report/budget/history/1') {
@@ -59,5 +62,33 @@ describe('FinanceHistoryPage', () => {
       back.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
     expect(container.textContent).toContain('Total Cost: $123');
+  });
+
+  it('loads new history when the context cookie changes', () => {
+    document.cookie = 'context=personal; path=/';
+    const mutate = vi.fn();
+    swrMock = vi.fn((key: string | null) => {
+      if (!key) return { mutate };
+      const matchCtx = key.match(/context=([^&]+)/);
+      const ctx = matchCtx ? matchCtx[1] : 'personal';
+      const matchGroup = key.match(/groupId=([^&]+)/);
+      const gid = matchGroup ? matchGroup[1] : undefined;
+      return {
+        data:
+          ctx === 'group' && gid === 'team-a'
+            ? [{ id: '2', date: '2024-02-01', totalCost: 456 }]
+            : [{ id: '1', date: '2024-01-01', totalCost: 123 }],
+        mutate,
+      };
+    });
+    const { container } = render(<FinanceHistoryPage />);
+    expect(container.textContent).toContain('2024-01-01');
+    document.cookie = 'context=group; path=/';
+    document.cookie = 'groupId=team-a; path=/';
+    act(() => {
+      window.dispatchEvent(new Event('context-changed'));
+    });
+    expect(container.textContent).toContain('2024-02-01');
+    expect(mutate).toHaveBeenCalled();
   });
 });
