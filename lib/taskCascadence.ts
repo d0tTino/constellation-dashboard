@@ -54,13 +54,18 @@ function ensureConnection() {
 
 export function subscribeToTaskStatus(callback: Callback) {
   callbacks.add(callback)
+  if (latestStatus) {
+    callback(latestStatus)
+  }
   ensureConnection()
   return () => {
     callbacks.delete(callback)
-    if (!callbacks.size && ws) {
+    if (!callbacks.size) {
       shouldReconnect = false
-      ws.close()
-      ws = null
+      if (ws) {
+        ws.close()
+        ws = null
+      }
       if (reconnectTimeout) {
         clearTimeout(reconnectTimeout)
         reconnectTimeout = null
