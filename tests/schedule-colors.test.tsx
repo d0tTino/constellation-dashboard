@@ -11,9 +11,13 @@ vi.mock('../app/socket-context', () => ({
   useSocketStatus: () => ({ connectionState: 'open', lastError: null, retry: () => {} }),
 }))
 
+let capturedEvents: any[] = []
 vi.mock('@fullcalendar/react', () => ({
   __esModule: true,
-  default: () => React.createElement('div')
+  default: (props: any) => {
+    capturedEvents = props.events
+    return React.createElement('div')
+  },
 }))
 
 function render(ui: React.ReactElement) {
@@ -26,22 +30,22 @@ function render(ui: React.ReactElement) {
   return { container, root }
 }
 
-describe('ScheduleCalendar legends', () => {
+describe('ScheduleCalendar color scheme', () => {
   beforeEach(() => {
     document.body.innerHTML = ''
+    capturedEvents = []
   })
 
-  it('displays layer and user legends', () => {
+  it('uses layer colors for background and user colors separately', () => {
     const layers = [{ id: 'l1', name: 'Layer 1', color: '#f00' }]
     const events = [
-      { id: '1', title: 'A', start: '2024-05-20T10:00:00', owner: 'alice', layer: 'l1' },
+      { id: 'e1', title: 'Event', start: '2024-05-20T10:00:00', layer: 'l1', owner: 'alice' },
     ]
     render(<ScheduleCalendar events={events} layers={layers} visibleLayers={['l1']} mutate={() => {}} />)
-    const layerLegend = document.querySelector('[aria-label="Layer color legend"]') as HTMLElement
-    expect(layerLegend).toBeTruthy()
-    expect(layerLegend.textContent).toContain('Layer 1')
-    const userLegend = document.querySelector('[aria-label="User color legend"]') as HTMLElement
-    expect(userLegend).toBeTruthy()
-    expect(userLegend.textContent).toContain('AL')
+    const event = capturedEvents.find((e: any) => e.id === 'e1')
+    expect(event.layerColor).toBe('#f00')
+    expect(event.backgroundColor).toBe('#f00')
+    expect(event.borderColor).toBe('#f00')
+    expect(event.userColor).toBe('#1f77b4')
   })
 })
