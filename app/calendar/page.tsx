@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import useSWR from 'swr'
 import { fetcher } from '../../lib/swr'
 import { AppContext } from '../../lib/context'
@@ -51,6 +51,26 @@ export default function CalendarPage() {
   const [error, setError] = useState<string | null>(null)
   const [selectedLayers, setSelectedLayers] = useState<string[]>([])
   const [layer, setLayer] = useState('')
+  const userColors = useMemo(() => {
+    const owners = Array.from(new Set(data.events.map(e => e.owner).filter(Boolean))) as string[]
+    const palette = [
+      '#1f77b4',
+      '#ff7f0e',
+      '#2ca02c',
+      '#d62728',
+      '#9467bd',
+      '#8c564b',
+      '#e377c2',
+      '#7f7f7f',
+      '#bcbd22',
+      '#17becf',
+    ]
+    const map: Record<string, string> = {}
+    owners.forEach((owner, idx) => {
+      map[owner] = palette[idx % palette.length]
+    })
+    return map
+  }, [data.events])
 
   const socket = useSocket()
   const calendarEvent = useCalendarEvents()
@@ -150,89 +170,96 @@ export default function CalendarPage() {
   }
 
   return (
-    <div>
-      <form onSubmit={handleNL} className="mb-4">
-        <label htmlFor="nl" className="mr-2">
-          Describe your event
-        </label>
-        <input
-          id="nl"
-          name="nl"
-          placeholder="Lunch with Mark tomorrow at noon"
-          value={nl}
-          onChange={e => setNl(e.target.value)}
-          className="border mr-2"
-        />
-        <button type="submit" className="border px-2">Send</button>
-      </form>
-      <CalendarLayerPanel layers={data.layers} selected={selectedLayers} onToggle={toggleLayer} />
-      <form onSubmit={handleCreate} className="mb-4">
-        <input
-          name="title"
-          placeholder="Title"
-          value={title}
-          onChange={e => setTitle(e.target.value)}
-          className="border mr-2"
-        />
-        <input
-          name="start"
-          type="date"
-          value={start}
-          onChange={e => setStart(e.target.value)}
-          className="border mr-2"
-        />
-        <input
-          name="end"
-          type="date"
-          value={end}
-          onChange={e => setEnd(e.target.value)}
-          className="border mr-2"
-        />
-        <input
-          name="invitees"
-          placeholder="Invitees"
-          value={invitees}
-          onChange={e => setInvitees(e.target.value)}
-          className="border mr-2"
-        />
-        <input
-          name="permissions"
-          placeholder="Permissions"
-          value={permissions}
-          onChange={e => setPermissions(e.target.value)}
-          className="border mr-2"
-        />
-        <select
-          name="layer"
-          value={layer}
-          onChange={e => setLayer(e.target.value)}
-          className="border mr-2"
-        >
-          {data.layers.map(l => (
-            <option key={l.id} value={l.id}>
-              {l.name}
-            </option>
-          ))}
-        </select>
-        <label className="mr-2">
-          <input
-            name="shared"
-            type="checkbox"
-            checked={shared}
-            onChange={e => setShared(e.target.checked)}
-            className="mr-1"
-          />
-          Shared
-        </label>
-        <button type="submit" className="border px-2">Add</button>
-      </form>
-      {error && <p role="alert" className="text-red-500">{error}</p>}
-      <ScheduleCalendar
-        events={data.events}
+    <div className="flex">
+      <CalendarLayerPanel
         layers={data.layers}
-        visibleLayers={selectedLayers}
-        mutate={mutate}
+        selected={selectedLayers}
+        onToggle={toggleLayer}
+        userColors={userColors}
       />
+      <div className="flex-1">
+        <form onSubmit={handleNL} className="mb-4">
+          <label htmlFor="nl" className="mr-2">
+            Describe your event
+          </label>
+          <input
+            id="nl"
+            name="nl"
+            placeholder="Lunch with Mark tomorrow at noon"
+            value={nl}
+            onChange={e => setNl(e.target.value)}
+            className="border mr-2"
+          />
+          <button type="submit" className="border px-2">Send</button>
+        </form>
+        <form onSubmit={handleCreate} className="mb-4">
+          <input
+            name="title"
+            placeholder="Title"
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+            className="border mr-2"
+          />
+          <input
+            name="start"
+            type="date"
+            value={start}
+            onChange={e => setStart(e.target.value)}
+            className="border mr-2"
+          />
+          <input
+            name="end"
+            type="date"
+            value={end}
+            onChange={e => setEnd(e.target.value)}
+            className="border mr-2"
+          />
+          <input
+            name="invitees"
+            placeholder="Invitees"
+            value={invitees}
+            onChange={e => setInvitees(e.target.value)}
+            className="border mr-2"
+          />
+          <input
+            name="permissions"
+            placeholder="Permissions"
+            value={permissions}
+            onChange={e => setPermissions(e.target.value)}
+            className="border mr-2"
+          />
+          <select
+            name="layer"
+            value={layer}
+            onChange={e => setLayer(e.target.value)}
+            className="border mr-2"
+          >
+            {data.layers.map(l => (
+              <option key={l.id} value={l.id}>
+                {l.name}
+              </option>
+            ))}
+          </select>
+          <label className="mr-2">
+            <input
+              name="shared"
+              type="checkbox"
+              checked={shared}
+              onChange={e => setShared(e.target.checked)}
+              className="mr-1"
+            />
+            Shared
+          </label>
+          <button type="submit" className="border px-2">Add</button>
+        </form>
+        {error && <p role="alert" className="text-red-500">{error}</p>}
+        <ScheduleCalendar
+          events={data.events}
+          layers={data.layers}
+          visibleLayers={selectedLayers}
+          mutate={mutate}
+        />
+      </div>
     </div>
   )
 }
