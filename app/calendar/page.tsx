@@ -105,12 +105,13 @@ export default function CalendarPage() {
   const handleNL = (e: React.FormEvent) => {
     e.preventDefault()
     if (!nl) return
-    const { context } = getClientContext()
+    const { context, groupId } = getClientContext()
     socket?.send(
       JSON.stringify({
         type: 'calendar.nl.request',
         text: nl,
         context,
+        groupId,
         user: session?.user?.id,
       }),
     )
