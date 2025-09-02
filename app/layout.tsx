@@ -56,6 +56,7 @@ export function ShellContent({
         <nav style={{ display: 'flex', gap: '1rem' }}>
           <Link href="/">Home</Link>
           <Link href="/settings">Settings</Link>
+          <Link href="/finance/history">History</Link>
           {session ? (
             <button type="button" onClick={() => signOut()}>Sign out</button>
           ) : (
