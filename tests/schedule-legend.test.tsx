@@ -1,20 +1,8 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { act } from 'react-dom/test-utils'
-import ScheduleCalendar from '../app/components/ScheduleCalendar'
-
-vi.mock('../app/socket-context', () => ({
-  __esModule: true,
-  useCalendarEvents: () => null,
-  useTaskStatus: () => null,
-  useSocketStatus: () => ({ connectionState: 'open', lastError: null, retry: () => {} }),
-}))
-
-vi.mock('@fullcalendar/react', () => ({
-  __esModule: true,
-  default: () => React.createElement('div')
-}))
+import CalendarLayerPanel from '../app/components/CalendarLayerPanel'
 
 function render(ui: React.ReactElement) {
   const container = document.createElement('div')
@@ -26,17 +14,22 @@ function render(ui: React.ReactElement) {
   return { container, root }
 }
 
-describe('ScheduleCalendar legends', () => {
+describe('Sidebar legends', () => {
   beforeEach(() => {
     document.body.innerHTML = ''
   })
 
   it('displays layer and user legends', () => {
     const layers = [{ id: 'l1', name: 'Layer 1', color: '#f00' }]
-    const events = [
-      { id: '1', title: 'A', start: '2024-05-20T10:00:00', owner: 'alice', layer: 'l1' },
-    ]
-    render(<ScheduleCalendar events={events} layers={layers} visibleLayers={['l1']} mutate={() => {}} />)
+    const userColors = { alice: '#0f0' }
+    render(
+      <CalendarLayerPanel
+        layers={layers}
+        selected={['l1']}
+        onToggle={() => {}}
+        userColors={userColors}
+      />
+    )
     const layerLegend = document.querySelector('[aria-label="Layer color legend"]') as HTMLElement
     expect(layerLegend).toBeTruthy()
     expect(layerLegend.textContent).toContain('Layer 1')
@@ -45,3 +38,4 @@ describe('ScheduleCalendar legends', () => {
     expect(userLegend.textContent).toContain('AL')
   })
 })
+

@@ -8,8 +8,6 @@ import interactionPlugin, { EventDropArg, DateClickArg } from '@fullcalendar/int
 import { EventContentArg, EventMountArg } from '@fullcalendar/core'
 import { useCalendarEvents, useTaskStatus } from '../socket-context'
 import SharedEventTooltip from './SharedEventTooltip'
-import UserLegend from './UserLegend'
-import LayerLegend from './LayerLegend'
 
 interface Layer {
   id: string
@@ -324,8 +322,6 @@ export default function ScheduleCalendar({ events, layers, visibleLayers, mutate
           </div>
         ))}
       </div>
-      <LayerLegend layers={layers} />
-      <UserLegend userColors={userColors} />
     </div>
   )
 }
