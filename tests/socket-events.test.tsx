@@ -4,7 +4,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { act } from 'react-dom/test-utils';
 
 vi.mock('next-auth/react', () => ({
-  useSession: () => ({ data: { accessToken: 'test-token' } }),
+  useSession: () => ({ data: { accessToken: 'test-token', user: { id: 'user1' } } }),
   signIn: vi.fn(),
 }));
 
@@ -141,12 +141,22 @@ describe('socket event propagation', () => {
     act(() => {
       viewBtn.click();
     });
-    expect(wsInstance.send).toHaveBeenCalledWith(
-      JSON.stringify({ type: 'finance.decision.request', category: 'Rent' }),
-    );
-    expect(wsInstance.send).toHaveBeenCalledWith(
-      JSON.stringify({ type: 'finance.explain.request', category: 'Rent' }),
-    );
+    const decisionPayload = JSON.parse(wsInstance.send.mock.calls[0][0]);
+    expect(decisionPayload).toMatchObject({
+      type: 'finance.decision.request',
+      category: 'Rent',
+      context: 'personal',
+      user: 'user1',
+    });
+    expect(decisionPayload.groupId).toBeUndefined();
+    const explainPayload = JSON.parse(wsInstance.send.mock.calls[1][0]);
+    expect(explainPayload).toMatchObject({
+      type: 'finance.explain.request',
+      category: 'Rent',
+      context: 'personal',
+      user: 'user1',
+    });
+    expect(explainPayload.groupId).toBeUndefined();
     expect(document.body.textContent).toContain('Payment schedule coming soon.');
     expect(document.body.textContent).toContain('AI explanation coming soon.');
     await act(async () => {

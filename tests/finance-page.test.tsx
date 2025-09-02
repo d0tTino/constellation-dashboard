@@ -14,6 +14,9 @@ vi.mock('../app/socket-context', () => ({
   useSocket: () => ({ send }),
   useSocketStatus: () => ({ connectionState: 'open', lastError: null, retry: () => {} }),
 }));
+vi.mock('next-auth/react', () => ({
+  useSession: () => ({ data: { user: { id: 'user1' } } }),
+}));
 
 import FinancePage from '../app/finance/page';
 
@@ -61,12 +64,22 @@ describe('FinancePage', () => {
     expect(costInfo.textContent).toBe('Cost of deviation: $50');
     const viewBtn = cards[0].querySelector('button') as HTMLButtonElement;
     act(() => { viewBtn.click(); });
-    expect(send).toHaveBeenCalledWith(
-      JSON.stringify({ type: 'finance.decision.request', category: 'Rent' }),
-    );
-    expect(send).toHaveBeenCalledWith(
-      JSON.stringify({ type: 'finance.explain.request', category: 'Rent' }),
-    );
+    const decisionPayload = JSON.parse(send.mock.calls[0][0]);
+    expect(decisionPayload).toMatchObject({
+      type: 'finance.decision.request',
+      category: 'Rent',
+      context: 'personal',
+      user: 'user1',
+    });
+    expect(decisionPayload.groupId).toBeUndefined();
+    const explainPayload = JSON.parse(send.mock.calls[1][0]);
+    expect(explainPayload).toMatchObject({
+      type: 'finance.explain.request',
+      category: 'Rent',
+      context: 'personal',
+      user: 'user1',
+    });
+    expect(explainPayload.groupId).toBeUndefined();
     expect(document.body.textContent).toContain('Payment schedule coming soon.');
     expect(document.body.textContent).toContain('AI explanation coming soon.');
   });
