@@ -145,13 +145,20 @@ describe('CalendarPage', () => {
       form.dispatchEvent(new Event('submit', { bubbles: true }));
     });
 
-    expect(socketMock.send).toHaveBeenCalledWith(
-      JSON.stringify({ type: 'calendar.nl.request', text: 'hello', context: 'personal', user: 'user1' })
-    );
+    expect(socketMock.send).toHaveBeenCalled();
+    const payload = JSON.parse(socketMock.send.mock.calls[0][0]);
+    expect(payload).toMatchObject({
+      type: 'calendar.nl.request',
+      text: 'hello',
+      context: 'personal',
+      user: 'user1',
+    });
+    expect(payload.groupId).toBeUndefined();
   });
 
   it('sends NL command with group context', async () => {
-    document.cookie = 'context=group; groupId=team-a';
+    document.cookie = 'context=group';
+    document.cookie = 'groupId=team-a';
     const mutate = vi.fn();
     swrMock = vi.fn(() => ({ data: { events: [], layers: [] }, mutate }));
 
@@ -169,9 +176,15 @@ describe('CalendarPage', () => {
       form.dispatchEvent(new Event('submit', { bubbles: true }));
     });
 
-    expect(socketMock.send).toHaveBeenCalledWith(
-      JSON.stringify({ type: 'calendar.nl.request', text: 'hi', context: 'group', user: 'user1' })
-    );
+    expect(socketMock.send).toHaveBeenCalled();
+    const payload = JSON.parse(socketMock.send.mock.calls[0][0]);
+    expect(payload).toEqual({
+      type: 'calendar.nl.request',
+      text: 'hi',
+      context: 'group',
+      groupId: 'team-a',
+      user: 'user1',
+    });
   });
 
   it('surfaces API errors', async () => {
@@ -381,7 +394,8 @@ describe('CalendarPage', () => {
       expect.objectContaining({ refreshInterval: 30000 }),
     );
 
-    document.cookie = 'context=group; groupId=team-a';
+    document.cookie = 'context=group';
+    document.cookie = 'groupId=team-a';
     await act(async () => {
       vi.advanceTimersByTime(1000);
     });
