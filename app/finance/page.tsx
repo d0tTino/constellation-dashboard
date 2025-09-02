@@ -5,6 +5,7 @@ import { fetcher } from '../../lib/swr'
 import { BudgetOption, rankBudgetOptions } from '../../lib/finance'
 import { useFinanceUpdates, useSocket } from '../socket-context'
 import { getClientContext } from '../../lib/client-context'
+import { useSession } from 'next-auth/react'
 
 export default function FinancePage() {
   const [budget, setBudget] = useState(1000)
@@ -18,6 +19,7 @@ export default function FinancePage() {
 
   const update = useFinanceUpdates()
   const socket = useSocket()
+  const { data: session } = useSession()
   const [paymentSchedules, setPaymentSchedules] = useState<Record<string, any[]>>({})
   const [aiExplanations, setAiExplanations] = useState<Record<string, string>>({})
   useEffect(() => {
@@ -133,12 +135,18 @@ export default function FinancePage() {
                     JSON.stringify({
                       type: 'finance.decision.request',
                       category: option.category,
+                      context,
+                      groupId,
+                      user: session?.user?.id,
                     }),
                   )
                   socket?.send(
                     JSON.stringify({
                       type: 'finance.explain.request',
                       category: option.category,
+                      context,
+                      groupId,
+                      user: session?.user?.id,
                     }),
                   )
                 }}
