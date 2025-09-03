@@ -2,11 +2,15 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { act } from 'react-dom/test-utils';
+import { PaymentScheduleItem, FinanceUpdate } from '../lib/finance';
 
-let swrMock: any;
-let send: any;
-let financeUpdate: any;
-vi.mock('swr', () => ({ __esModule: true, default: (...args: any[]) => swrMock(...args) }));
+let swrMock: ReturnType<typeof vi.fn>;
+let send: ReturnType<typeof vi.fn>;
+let financeUpdate: FinanceUpdate | null;
+vi.mock('swr', () => ({
+  __esModule: true,
+  default: (...args: unknown[]) => swrMock(...(args as any)),
+}));
 vi.mock('../app/socket-context', () => ({
   __esModule: true,
   useFinanceUpdates: () => financeUpdate,
@@ -102,7 +106,7 @@ describe('FinancePage', () => {
     financeUpdate = {
       type: 'finance.decision.result',
       category: 'Rent',
-      paymentSchedule: ['Installment 1'],
+      paymentSchedule: [{ description: 'Installment 1' } as PaymentScheduleItem],
     };
     act(() => {
       root.render(<FinancePage />);

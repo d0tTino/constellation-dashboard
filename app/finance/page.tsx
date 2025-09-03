@@ -2,7 +2,12 @@
 import React, { useState, useEffect, useRef } from 'react'
 import useSWR from 'swr'
 import { fetcher } from '../../lib/swr'
-import { BudgetOption, rankBudgetOptions } from '../../lib/finance'
+import {
+  BudgetOption,
+  rankBudgetOptions,
+  PaymentScheduleItem,
+  FinanceUpdate,
+} from '../../lib/finance'
 import { useFinanceUpdates, useSocket } from '../socket-context'
 import { getClientContext } from '../../lib/client-context'
 import { useSession } from 'next-auth/react'
@@ -17,10 +22,13 @@ export default function FinancePage() {
     { refreshInterval: 30000 },
   )
 
-  const update = useFinanceUpdates()
+  const update = useFinanceUpdates() as FinanceUpdate | null
   const socket = useSocket()
   const { data: session } = useSession()
-  const [paymentSchedules, setPaymentSchedules] = useState<Record<string, any[]>>({})
+  const userId = (session?.user as { id?: string } | undefined)?.id
+  const [paymentSchedules, setPaymentSchedules] = useState<
+    Record<string, PaymentScheduleItem[]>
+  >({})
   const [aiExplanations, setAiExplanations] = useState<Record<string, string>>({})
   useEffect(() => {
     const handleContextChange = () => {
@@ -137,7 +145,7 @@ export default function FinancePage() {
                       category: option.category,
                       context,
                       groupId,
-                      user: session?.user?.id,
+                      user: userId,
                     }),
                   )
                   socket?.send(
@@ -146,7 +154,7 @@ export default function FinancePage() {
                       category: option.category,
                       context,
                       groupId,
-                      user: session?.user?.id,
+                      user: userId,
                     }),
                   )
                 }}
@@ -164,7 +172,7 @@ export default function FinancePage() {
             {paymentSchedules[selected.category] ? (
               <ul className="mb-2 list-disc pl-5">
                 {paymentSchedules[selected.category].map((item, i) => (
-                  <li key={i}>{typeof item === 'string' ? item : JSON.stringify(item)}</li>
+                  <li key={i}>{item.description}</li>
                 ))}
               </ul>
             ) : (
