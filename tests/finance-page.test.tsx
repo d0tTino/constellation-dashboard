@@ -88,6 +88,35 @@ describe('FinancePage', () => {
     expect(document.body.textContent).toContain('AI explanation coming soon.');
   });
 
+  it('traps focus in modal and restores trigger focus', () => {
+    const mutate = vi.fn();
+    swrMock = vi.fn(() => ({
+      data: [
+        { category: 'Rent', amount: 960, costOfDeviation: 0 },
+      ],
+      mutate,
+    }));
+    const { container } = render(<FinancePage />);
+    const viewBtn = container.querySelector('button.text-blue-500') as HTMLButtonElement;
+    act(() => {
+      viewBtn.focus();
+      viewBtn.click();
+    });
+    const modal = document.querySelector('.bg-white.p-6.rounded.shadow-lg') as HTMLDivElement;
+    expect(modal.getAttribute('role')).toBe('dialog');
+    expect(modal.getAttribute('aria-modal')).toBe('true');
+    const closeBtn = modal.querySelector('button') as HTMLButtonElement;
+    expect(document.activeElement).toBe(closeBtn);
+    closeBtn.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
+    expect(document.activeElement).toBe(closeBtn);
+    closeBtn.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true }));
+    expect(document.activeElement).toBe(closeBtn);
+    act(() => {
+      closeBtn.click();
+    });
+    expect(document.activeElement).toBe(viewBtn);
+  });
+
   it('renders updated payment schedule and explanation after events', () => {
     const mutate = vi.fn();
     swrMock = vi.fn(() => ({

@@ -77,6 +77,39 @@ export default function FinancePage() {
   )
 
   const [selected, setSelected] = useState<typeof ranked[0] | null>(null)
+  const triggerRef = useRef<HTMLButtonElement | null>(null)
+  const modalRef = useRef<HTMLDivElement | null>(null)
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null)
+
+  useEffect(() => {
+    if (!selected) return
+    const modalEl = modalRef.current
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Tab') {
+        const focusable = modalEl?.querySelectorAll<HTMLElement>(
+          'a, button, input, textarea, select, [tabindex]:not([tabindex="-1"])',
+        )
+        if (!focusable || focusable.length === 0) return
+        const first = focusable[0]
+        const last = focusable[focusable.length - 1]
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault()
+          last.focus()
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault()
+          first.focus()
+        }
+      } else if (e.key === 'Escape') {
+        setSelected(null)
+      }
+    }
+    modalEl?.addEventListener('keydown', handleKeyDown)
+    closeButtonRef.current?.focus()
+    return () => {
+      modalEl?.removeEventListener('keydown', handleKeyDown)
+      triggerRef.current?.focus()
+    }
+  }, [selected])
 
   return (
     <div className="p-4">
@@ -137,7 +170,8 @@ export default function FinancePage() {
               <p>Cost of deviation: ${option.costOfDeviation}</p>
               <button
                 className="mt-2 text-blue-500 underline"
-                onClick={() => {
+                onClick={(e) => {
+                  triggerRef.current = e.currentTarget
                   setSelected(option)
                   socket?.send(
                     JSON.stringify({
@@ -167,7 +201,12 @@ export default function FinancePage() {
       </div>
       {selected && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded shadow-lg max-w-sm w-full">
+          <div
+            ref={modalRef}
+            role="dialog"
+            aria-modal="true"
+            className="bg-white p-6 rounded shadow-lg max-w-sm w-full"
+          >
             <h2 className="text-lg font-bold mb-2">{selected.category} Details</h2>
             {paymentSchedules[selected.category] ? (
               <ul className="mb-2 list-disc pl-5">
@@ -187,6 +226,7 @@ export default function FinancePage() {
             )}
             <div className="flex justify-end">
               <button
+                ref={closeButtonRef}
                 className="px-4 py-2 bg-gray-200 rounded"
                 onClick={() => setSelected(null)}
               >
