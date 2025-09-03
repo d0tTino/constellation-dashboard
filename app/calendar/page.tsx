@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect } from 'react'
 import useSWR from 'swr'
 import { fetcher } from '../../lib/swr'
 import { AppContext } from '../../lib/context'
@@ -9,6 +9,7 @@ import ScheduleCalendar from '../components/ScheduleCalendar'
 import CalendarLayerPanel from '../components/CalendarLayerPanel'
 import { useSocket, useCalendarEvents } from '../socket-context'
 import { useSession } from 'next-auth/react'
+import useUserColors from '../../lib/hooks/useUserColors'
 
 interface Layer {
   id: string
@@ -51,26 +52,7 @@ export default function CalendarPage() {
   const [error, setError] = useState<string | null>(null)
   const [selectedLayers, setSelectedLayers] = useState<string[]>([])
   const [layer, setLayer] = useState('')
-  const userColors = useMemo(() => {
-    const owners = Array.from(new Set(data.events.map(e => e.owner).filter(Boolean))) as string[]
-    const palette = [
-      '#1f77b4',
-      '#ff7f0e',
-      '#2ca02c',
-      '#d62728',
-      '#9467bd',
-      '#8c564b',
-      '#e377c2',
-      '#7f7f7f',
-      '#bcbd22',
-      '#17becf',
-    ]
-    const map: Record<string, string> = {}
-    owners.forEach((owner, idx) => {
-      map[owner] = palette[idx % palette.length]
-    })
-    return map
-  }, [data.events])
+  const userColors = useUserColors(data.events)
 
   const socket = useSocket()
   const calendarEvent = useCalendarEvents()
