@@ -25,6 +25,7 @@ export default function ConnectionStatus() {
       style={{ cursor: 'pointer', color: 'red' }}
       onClick={() => retry()}
       role="button"
+      aria-live="polite"
     >
       {message}
     </div>
