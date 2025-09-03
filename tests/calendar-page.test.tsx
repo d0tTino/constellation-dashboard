@@ -414,3 +414,47 @@ describe.skip('CalendarPage', () => {
     vi.useRealTimers();
   });
 });
+
+describe('CalendarPage API errors', () => {
+  beforeEach(() => {
+    calendarProps = {};
+    document.body.innerHTML = '';
+    vi.unstubAllGlobals();
+    socketMock = { send: vi.fn() };
+    document.cookie = 'context=personal';
+    document.cookie =
+      'groupId=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+  });
+
+  it('displays error message when event creation fails with 403', async () => {
+    const mutate = vi.fn();
+    swrMock = vi.fn(() => ({
+      data: { events: [], layers: [{ id: 'a', name: 'A', color: '#f00' }] },
+      mutate,
+    }));
+
+    const fetchMock = vi.fn(() =>
+      Promise.resolve(new Response('Forbidden', { status: 403 })),
+    );
+    // @ts-ignore
+    global.fetch = fetchMock;
+
+    const { container } = render(<CalendarPage />);
+
+    const title = container.querySelector('input[name="title"]') as HTMLInputElement;
+    const form = title.closest('form') as HTMLFormElement;
+
+    act(() => {
+      title.value = 'event';
+      title.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+
+    await act(async () => {
+      form.dispatchEvent(new Event('submit', { bubbles: true }));
+    });
+
+    const alert = container.querySelector('[role="alert"]');
+    expect(alert?.textContent).toBe('Forbidden');
+  });
+});
+
