@@ -168,7 +168,7 @@ export default function ScheduleCalendar({ events, layers, visibleLayers, mutate
       return
     }
     if (shared) {
-      info.el.classList.add('border-2', 'border-dashed')
+      info.el.classList.add('border-2', 'border-dashed', 'border-blue-500')
       const icon = document.createElement('span')
       icon.textContent = '👥'
       icon.className = 'mr-1'
@@ -177,7 +177,9 @@ export default function ScheduleCalendar({ events, layers, visibleLayers, mutate
     const layerColor = info.event.extendedProps.layerColor || info.event.backgroundColor
     if (layerColor) {
       info.el.style.backgroundColor = layerColor
-      info.el.style.borderColor = layerColor
+      if (!shared) {
+        info.el.style.borderColor = layerColor
+      }
     }
   }
 
