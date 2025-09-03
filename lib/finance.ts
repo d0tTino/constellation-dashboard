@@ -6,6 +6,26 @@ export type BudgetOption = {
 
 export type RankedBudgetOption = BudgetOption & { rank: number }
 
+export interface PaymentScheduleItem {
+  description: string
+  amount?: number
+  dueDate?: string
+}
+
+export interface FinanceUpdate {
+  type: 'finance.decision.result' | 'finance.explain.result'
+  category?: string
+  paymentSchedule?: PaymentScheduleItem[]
+  schedule?: PaymentScheduleItem[]
+  explanation?: string
+  message?: string
+  data?: {
+    category?: string
+    paymentSchedule?: PaymentScheduleItem[]
+    explanation?: string
+  }
+}
+
 export function rankBudgetOptions(options: BudgetOption[]): RankedBudgetOption[] {
   const sorted = options
     .slice()

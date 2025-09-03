@@ -17,8 +17,11 @@ vi.mock('@fullcalendar/daygrid', () => ({ __esModule: true, default: {} }));
 vi.mock('@fullcalendar/timegrid', () => ({ __esModule: true, default: {} }));
 vi.mock('@fullcalendar/interaction', () => ({ __esModule: true, default: {}, EventDropArg: class {} }));
 
-let swrMock: any;
-vi.mock('swr', () => ({ __esModule: true, default: (...args: any[]) => swrMock(...args) }));
+let swrMock: ReturnType<typeof vi.fn>;
+vi.mock('swr', () => ({
+  __esModule: true,
+  default: (...args: unknown[]) => swrMock(...(args as any)),
+}));
 
 function render(ui: React.ReactElement) {
   const container = document.createElement('div');
@@ -164,7 +167,7 @@ describe('socket event propagation', () => {
         data: JSON.stringify({
           type: 'finance.decision.result',
           category: 'Rent',
-          paymentSchedule: ['due now'],
+          paymentSchedule: [{ description: 'due now' }],
         }),
       });
     });

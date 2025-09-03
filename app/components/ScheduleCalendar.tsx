@@ -2,10 +2,10 @@
 
 import React, { useEffect, useState, useMemo } from 'react'
 import FullCalendar from '@fullcalendar/react'
-import dayGridPlugin, { DayCellContentArg } from '@fullcalendar/daygrid'
+import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
-import interactionPlugin, { EventDropArg, DateClickArg } from '@fullcalendar/interaction'
-import { EventContentArg, EventMountArg } from '@fullcalendar/core'
+import interactionPlugin, { DateClickArg } from '@fullcalendar/interaction'
+import { DayCellContentArg, EventContentArg, EventMountArg, EventDropArg } from '@fullcalendar/core'
 import { useCalendarEvents, useTaskStatus } from '../socket-context'
 import SharedEventTooltip from './SharedEventTooltip'
 
