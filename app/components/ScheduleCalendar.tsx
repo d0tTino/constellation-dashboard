@@ -8,6 +8,7 @@ import interactionPlugin, { DateClickArg } from '@fullcalendar/interaction'
 import { DayCellContentArg, EventContentArg, EventMountArg, EventDropArg } from '@fullcalendar/core'
 import { useCalendarEvents, useTaskStatus } from '../socket-context'
 import SharedEventTooltip from './SharedEventTooltip'
+import useUserColors from '../../lib/hooks/useUserColors'
 
 interface Layer {
   id: string
@@ -59,26 +60,7 @@ export default function ScheduleCalendar({ events, layers, visibleLayers, mutate
     if (taskStatus) mutate()
   }, [taskStatus, mutate])
 
-  const userColors = useMemo(() => {
-    const owners = Array.from(new Set(events.map(e => e.owner).filter(Boolean))) as string[]
-    const palette = [
-      '#1f77b4',
-      '#ff7f0e',
-      '#2ca02c',
-      '#d62728',
-      '#9467bd',
-      '#8c564b',
-      '#e377c2',
-      '#7f7f7f',
-      '#bcbd22',
-      '#17becf'
-    ]
-    const map: Record<string, string> = {}
-    owners.forEach((owner, idx) => {
-      map[owner] = palette[idx % palette.length]
-    })
-    return map
-  }, [events])
+  const userColors = useUserColors(events)
 
   const filtered = events
     .filter(e => !e.layer || visibleLayers.includes(e.layer))
