@@ -33,6 +33,13 @@ describe('ConnectionStatus', () => {
     )
   })
 
+  it('marks status message as polite live region', () => {
+    socketStatusMock = { connectionState: 'error', lastError: null, retry: vi.fn() }
+    const { container } = render(<ConnectionStatus />)
+    const div = container.querySelector('div') as HTMLDivElement
+    expect(div.getAttribute('aria-live')).toBe('polite')
+  })
+
   it('displays error message and retries on click', () => {
     const retry = vi.fn()
     const lastError = { code: '500', message: 'fail' }
